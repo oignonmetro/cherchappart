@@ -70,15 +70,21 @@ alter table public.push_subscriptions  enable row level security;
 alter table public.email_sources       enable row level security;
 
 -- Chaque utilisateur gère uniquement ses propres lignes.
+-- (drop + create : CREATE POLICY n'accepte pas IF NOT EXISTS, on rend donc le
+-- script rejouable sans erreur si vous l'exécutez à nouveau plus tard.)
+drop policy if exists "own searches" on public.searches;
 create policy "own searches"  on public.searches
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "own listings" on public.listings;
 create policy "own listings"  on public.listings
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "own push subs" on public.push_subscriptions;
 create policy "own push subs" on public.push_subscriptions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "own email sources" on public.email_sources;
 create policy "own email sources" on public.email_sources
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
