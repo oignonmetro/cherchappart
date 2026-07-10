@@ -15,21 +15,38 @@ concurrency:
 jobs:
   veille:
     runs-on: ubuntu-latest
-    # Ne s'exécute que si les secrets Supabase sont configurés.
     steps:
-      - uses: actions/checkout@v4
+      # Garde : si les secrets ne sont pas configurés, on s'arrête proprement
+      # (pas d'échec, pas d'installation inutile) — voir SETUP.md.
+      - name: Vérifier la configuration
+        id: cfg
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Secrets Supabase absents — veille en veille (voir SETUP.md)."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      - uses: actions/setup-node@v4
+      - if: steps.cfg.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.cfg.outputs.run == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: Installer les dépendances
+      - if: steps.cfg.outputs.run == 'true'
+        name: Installer les dépendances
         working-directory: backend
         run: npm ci || npm install
 
-      - name: Lancer la veille
+      - if: steps.cfg.outputs.run == 'true'
+        name: Lancer la veille
         working-directory: backend
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

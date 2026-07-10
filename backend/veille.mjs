@@ -23,8 +23,8 @@ const {
 } = process.env;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.");
-  process.exit(1);
+  console.log("Secrets Supabase non configurés — veille ignorée (voir SETUP.md). Sortie propre.");
+  process.exit(0);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
