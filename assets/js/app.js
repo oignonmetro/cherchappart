@@ -98,6 +98,7 @@
     renderVilles();
     renderExclusSuggestions();
     updatePriceLabel();
+    updateChambreNote();
   }
 
   function updatePriceLabel() {
@@ -105,6 +106,12 @@
       $("#transaction").value === "vente" ? "Prix (€)" : "Loyer / prix (€)";
   }
   $("#transaction").addEventListener("change", updatePriceLabel);
+
+  function updateChambreNote() {
+    const on = $$(".typeBien:checked").some((c) => c.value === "chambre");
+    $("#chambre-note").hidden = !on;
+  }
+  $$(".typeBien").forEach((c) => c.addEventListener("change", updateChambreNote));
 
   /* ---------- Villes (tags) ---------- */
   function renderVilles() {
@@ -209,14 +216,18 @@
     // Leboncoin : paramètres propres et fiables.
     leboncoin(c) {
       const p = new URLSearchParams();
-      p.set("category", c.transaction === "vente" ? "9" : "10");
+      // "Chambre chez l'habitant" -> catégorie Colocations (11).
+      const chambre = c.typeBien.includes("chambre");
+      p.set("category", chambre ? "11" : (c.transaction === "vente" ? "9" : "10"));
       if (c.villes.length) p.set("locations", c.villes.join(","));
       const price = range(c.prixMin, c.prixMax); if (price) p.set("price", price);
       const sq = range(c.surfaceMin, c.surfaceMax); if (sq) p.set("square", sq);
       const rooms = range(c.piecesMin, c.piecesMax); if (rooms) p.set("rooms", rooms);
-      const ret = { maison: "1", appartement: "2" };
-      const types = c.typeBien.map((t) => ret[t]).filter(Boolean);
-      if (types.length) p.set("real_estate_type", types.join(","));
+      if (!chambre) {
+        const ret = { maison: "1", appartement: "2" };
+        const types = c.typeBien.map((t) => ret[t]).filter(Boolean);
+        if (types.length) p.set("real_estate_type", types.join(","));
+      }
       if (c.ownerType === "private") p.set("owner_type", "private");
       if (c.ownerType === "pro") p.set("owner_type", "pro");
       p.set("sort", "time"); p.set("order", "desc");
@@ -225,8 +236,9 @@
     // PAP : URL par slug (pas de query fiable). On construit le meilleur chemin possible.
     pap(c) {
       const t = c.transaction === "vente" ? "ventes" : "locations";
-      const bien = c.typeBien.includes("maison") && !c.typeBien.includes("appartement")
-        ? "maison" : "appartement";
+      // "Chambre chez l'habitant" -> chambres (colocation) sur PAP.
+      const bien = c.typeBien.includes("chambre") ? "chambres"
+        : (c.typeBien.includes("maison") && !c.typeBien.includes("appartement") ? "maison" : "appartement");
       const slug = (c.villes[0] || "").toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       let url = `https://www.pap.fr/annonce/${t}-${bien}`;
@@ -362,6 +374,14 @@
     setSearchStatus("Recherche en direct sur Bien'ici…");
     try {
       readForm();
+      // Bien'ici ne couvre pas "chambre chez l'habitant" : si c'est le SEUL type
+      // demandé, on n'affiche pas d'appartements par erreur.
+      const supported = (criteria.typeBien || []).some((t) => t === "appartement" || t === "maison");
+      if (criteria.typeBien.length && !supported) {
+        ALL = [];
+        setSearchStatus("Bien'ici ne couvre pas « chambre chez l'habitant » — utilisez l'onglet Recherches (Leboncoin/PAP).");
+        return;
+      }
       ALL = await bieniciSearch(criteria);
       const h = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
       setSearchStatus(`${ALL.length} affichée(s)${lastTotal ? " sur " + lastTotal.toLocaleString("fr-FR") : ""} · à jour ${h}`);
