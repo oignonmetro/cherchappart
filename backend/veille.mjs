@@ -13,6 +13,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
+import { ingestEmails } from "./email-ingest.mjs";
 
 const {
   SUPABASE_URL,
@@ -205,6 +206,16 @@ async function run() {
       await notify(s.user_id, newItems);
     }
   }
+  console.log(`Bien'ici : ${totalNew} nouvelle(s) annonce(s).`);
+
+  // Ingestion des alertes e-mail Leboncoin / PAP / SeLoger (même push unifié).
+  try {
+    const res = await ingestEmails(supabase, notify);
+    if (res && res.new) totalNew += res.new;
+  } catch (e) {
+    console.warn("Ingestion e-mail échouée :", e.message);
+  }
+
   console.log(`Terminé. ${totalNew} nouvelle(s) annonce(s) au total.`);
 }
 

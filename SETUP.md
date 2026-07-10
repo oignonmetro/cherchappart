@@ -61,6 +61,32 @@ Dépôt ▸ **Settings ▸ Secrets and variables ▸ Actions ▸ New repository 
 
 ---
 
+## 6. (Option) Alertes Leboncoin / PAP / SeLoger — sans scraping
+
+Ces sites bloquent le scraping (DataDome). La solution gratuite et conforme :
+**lire leurs propres e-mails d'alerte** et les convertir en push unifié.
+
+1. **Crée une adresse Gmail dédiée** (ex. `mes-alertes-immo@gmail.com`) que tu ne
+   liras pas — elle sert de tuyau.
+2. Active un **mot de passe d'application** : compte Google ▸ Sécurité ▸
+   validation en 2 étapes (obligatoire) ▸ **Mots de passe des applications** →
+   crée-en un (16 caractères). C'est lui qui sert de `IMAP_PASSWORD` (pas ton mot
+   de passe Gmail).
+3. Sur **Leboncoin, PAP, SeLoger** : fais ta recherche avec tes critères →
+   **enregistre-la / crée une alerte e-mail** en indiquant l'adresse dédiée.
+4. Ajoute ces **secrets GitHub** :
+
+   | Secret | Valeur |
+   |---|---|
+   | `IMAP_USER` | `mes-alertes-immo@gmail.com` |
+   | `IMAP_PASSWORD` | le mot de passe d'application (16 car.) |
+   | `ALERT_OWNER_EMAIL` | l'e-mail de **ton compte ChercheAppart** (celui de connexion au site) |
+   | `IMAP_HOST` | `imap.gmail.com` (optionnel, valeur par défaut) |
+
+À chaque passage (30 min), le worker lit les e-mails d'alerte non lus, en extrait
+les annonces, les dédoublonne et t'envoie le **même push** que Bien'ici. Tes
+e-mails d'alerte sont marqués « lus » ; tu n'as jamais à ouvrir cette boîte.
+
 ## Notes
 
 - **iOS** : le Web Push exige d'**ajouter le site à l'écran d'accueil** (Safari ▸ Partager
