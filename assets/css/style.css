@@ -144,3 +144,10 @@ textarea{resize:vertical}
 .ext-steps{margin:6px 0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
 .ext-steps li{font-size:.88rem}
 .ext-steps code{margin:0 2px}
+
+/* Suggestions de mots-clés à exclure */
+.chip-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chip{background:var(--bg);border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;padding:5px 12px;font:inherit;font-size:.82rem;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip.is-active{background:rgba(79,140,255,.16);border-color:var(--accent);color:var(--text);font-weight:600}

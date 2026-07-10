@@ -79,6 +79,10 @@ class Bienici(SiteAdapter):
             f["minRooms"] = c["piecesMin"]
         if c.get("piecesMax") is not None:
             f["maxRooms"] = c["piecesMax"]
+        if c.get("chambresMin") is not None:
+            f["minBedrooms"] = c["chambresMin"]
+        if c.get("chambresMax") is not None:
+            f["maxBedrooms"] = c["chambresMax"]
         owner = c.get("ownerType")
         if owner == "private":
             f["onTheMarketTypes"] = ["by-individuals"]
@@ -142,6 +146,7 @@ class Bienici(SiteAdapter):
             price=(f"{int(price):,}".replace(",", " ") + unit) if isinstance(price, (int, float)) else "",
             surface=_to_int(ad.get("surfaceArea")),
             rooms=_to_int(ad.get("roomsQuantity")),
+            bedrooms=_to_int(ad.get("bedroomsQuantity")),
             location=" ".join(filter(None, [city, cp])),
             image=image,
             postedAt=ad.get("publicationDate", "") or ad.get("modificationDate", ""),

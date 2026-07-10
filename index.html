@@ -163,6 +163,15 @@
         </div>
 
         <div class="field">
+          <label>Nombre de chambres</label>
+          <div class="range">
+            <input type="number" id="chambresMin" placeholder="min" min="0" />
+            <span>—</span>
+            <input type="number" id="chambresMax" placeholder="max" min="0" />
+          </div>
+        </div>
+
+        <div class="field">
           <label>Vendeur / bailleur</label>
           <select id="ownerType">
             <option value="all">Tous</option>
@@ -184,8 +193,9 @@
 
         <div class="field span-2">
           <label>Mots-clés à exclure (optionnel)</label>
+          <div class="chip-suggestions" id="exclus-suggestions"></div>
           <input type="text" id="motsExclus" placeholder="Ex. colocation, rez-de-chaussée, sous-location" />
-          <small>Séparés par des virgules. Une annonce contenant l'un de ces mots sera masquée.</small>
+          <small>Cliquez une suggestion pour l'ajouter/retirer, ou tapez les vôtres séparés par des virgules. Une annonce contenant l'un de ces mots sera masquée.</small>
         </div>
 
         <hr class="span-2" />

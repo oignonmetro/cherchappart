@@ -17,6 +17,7 @@
     prixMin: null, prixMax: null,
     surfaceMin: null, surfaceMax: null,
     piecesMin: null, piecesMax: null,
+    chambresMin: null, chambresMax: null,
     ownerType: "all",
     sites: ["bienici", "leboncoin"],
     motsExclus: [],
@@ -69,6 +70,8 @@
     criteria.surfaceMax = num($("#surfaceMax").value);
     criteria.piecesMin = num($("#piecesMin").value);
     criteria.piecesMax = num($("#piecesMax").value);
+    criteria.chambresMin = num($("#chambresMin").value);
+    criteria.chambresMax = num($("#chambresMax").value);
     criteria.ownerType = $("#ownerType").value;
     criteria.sites = $$(".site:checked").map((c) => c.value);
     criteria.motsExclus = $("#motsExclus").value.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
@@ -85,12 +88,15 @@
     $("#surfaceMax").value = criteria.surfaceMax ?? "";
     $("#piecesMin").value = criteria.piecesMin ?? "";
     $("#piecesMax").value = criteria.piecesMax ?? "";
+    $("#chambresMin").value = criteria.chambresMin ?? "";
+    $("#chambresMax").value = criteria.chambresMax ?? "";
     $("#ownerType").value = criteria.ownerType;
     $$(".site").forEach((c) => (c.checked = criteria.sites.includes(c.value)));
     $("#motsExclus").value = (criteria.motsExclus || []).join(", ");
     $("#messageModele").value = criteria.messageModele || DEFAULT_MESSAGE;
     $("#contactAuto").checked = !!criteria.contactAuto;
     renderVilles();
+    renderExclusSuggestions();
     updatePriceLabel();
   }
 
@@ -123,6 +129,35 @@
       villes.pop(); renderVilles();
     }
   });
+
+  /* ---------- Mots-clés à exclure (suggestions) ---------- */
+  const MOTS_EXCLUS_SUGGESTIONS = [
+    "colocation", "sous-location", "viager", "rez-de-chaussée",
+    "vis-à-vis", "à rénover", "sans ascenseur", "chambre de bonne",
+  ];
+
+  function currentExclusList() {
+    return $("#motsExclus").value.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  }
+
+  function renderExclusSuggestions() {
+    const box = $("#exclus-suggestions");
+    const active = new Set(currentExclusList());
+    box.innerHTML = MOTS_EXCLUS_SUGGESTIONS.map((m) =>
+      `<button type="button" class="chip ${active.has(m) ? "is-active" : ""}" data-mot="${esc(m)}">${esc(m)}</button>`
+    ).join("");
+    $$(".chip", box).forEach((chip) => chip.addEventListener("click", () => toggleExclusMot(chip.dataset.mot)));
+  }
+
+  function toggleExclusMot(mot) {
+    const list = currentExclusList();
+    const i = list.indexOf(mot);
+    if (i === -1) list.push(mot); else list.splice(i, 1);
+    $("#motsExclus").value = list.join(", ");
+    renderExclusSuggestions();
+  }
+
+  $("#motsExclus").addEventListener("input", renderExclusSuggestions);
 
   /* ---------- Boutons critères ---------- */
   $("#save-btn").addEventListener("click", () => {
@@ -284,6 +319,8 @@
     if (c.surfaceMax != null) f.maxArea = c.surfaceMax;
     if (c.piecesMin != null) f.minRooms = c.piecesMin;
     if (c.piecesMax != null) f.maxRooms = c.piecesMax;
+    if (c.chambresMin != null) f.minBedrooms = c.chambresMin;
+    if (c.chambresMax != null) f.maxBedrooms = c.chambresMax;
     return f;
   }
 
@@ -309,6 +346,7 @@
         price,
         surface: ad.surfaceArea ? Math.round(ad.surfaceArea) : null,
         rooms: ad.roomsQuantity || null,
+        bedrooms: ad.bedroomsQuantity || null,
         location: [ad.city, ad.postalCode].filter(Boolean).join(" "),
         image,
       };
@@ -376,7 +414,8 @@
       const isNew = !seen.has(l.id);
       const thumb = l.image
         ? `style="background-image:url('${esc(l.image)}')"` : "";
-      const meta = [l.surface && `${esc(l.surface)} m²`, l.rooms && `${esc(l.rooms)} p.`, l.location && esc(l.location)]
+      const meta = [l.surface && `${esc(l.surface)} m²`, l.rooms && `${esc(l.rooms)} p.`,
+        l.bedrooms && `${esc(l.bedrooms)} ch.`, l.location && esc(l.location)]
         .filter(Boolean).join(" · ");
       return `<article class="listing ${isNew ? "is-new" : ""}">
         <span class="src">${esc(l.source || "")}</span>

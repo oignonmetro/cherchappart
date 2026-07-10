@@ -86,6 +86,8 @@ function buildFilters(c, zoneIds) {
   if (c.surfaceMax != null) f.maxArea = c.surfaceMax;
   if (c.piecesMin != null) f.minRooms = c.piecesMin;
   if (c.piecesMax != null) f.maxRooms = c.piecesMax;
+  if (c.chambresMin != null) f.minBedrooms = c.chambresMin;
+  if (c.chambresMax != null) f.maxBedrooms = c.chambresMax;
   return f;
 }
 
@@ -107,6 +109,7 @@ function mapAd(ad, unit) {
       ? Math.round(ad.price).toLocaleString("fr-FR") + unit : "",
     surface: ad.surfaceArea ? Math.round(ad.surfaceArea) : null,
     rooms: ad.roomsQuantity || null,
+    bedrooms: ad.bedroomsQuantity || null,
     location: [ad.city, ad.postalCode].filter(Boolean).join(" "),
     image: ph ? (ph.url_photo || ph.url || "") : "",
     source: "bienici",

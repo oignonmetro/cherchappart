@@ -8,6 +8,8 @@
   "surfaceMax": null,
   "piecesMin": 1,
   "piecesMax": null,
+  "chambresMin": null,
+  "chambresMax": null,
   "ownerType": "all",
   "sites": ["bienici", "leboncoin", "pap"],
   "motsExclus": ["colocation", "sous-location"],

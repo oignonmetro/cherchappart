@@ -20,6 +20,7 @@ class Listing:
     price: str = ""
     surface: int | None = None
     rooms: int | None = None
+    bedrooms: int | None = None
     location: str = ""
     image: str = ""
     contactEmail: str = ""
