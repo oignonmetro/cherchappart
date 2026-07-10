@@ -11,7 +11,7 @@
  *                        à VAPID_PUBLIC_KEY côté secrets GitHub)
  */
 window.CHERCHEAPPART_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://plxzievikemytnssnqxm.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_JTsOY0fdpFHQz-b-uepKcA_N9u_i2EK",
   VAPID_PUBLIC_KEY: "BKJNwAa7Cm1_8MmqE_6m1zu0Ey8jzKNdtuEyEy6XhZktx5wViOI6f8oiOaPdcUBDhsoQKUvSfDcEnK4UuaoeelI",
 };
