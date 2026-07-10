@@ -9,7 +9,7 @@
   "piecesMin": 1,
   "piecesMax": null,
   "ownerType": "all",
-  "sites": ["leboncoin", "pap"],
+  "sites": ["bienici", "leboncoin", "pap"],
   "motsExclus": ["colocation", "sous-location"],
   "messageModele": "Bonjour,\n\nVotre annonce « {{titre}} » ({{prix}}) à {{ville}} m'intéresse. Serait-il possible d'organiser une visite ?\n\nLien : {{lien}}\n\nCordialement,",
   "contactAuto": false

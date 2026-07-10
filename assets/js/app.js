@@ -18,7 +18,7 @@
     surfaceMin: null, surfaceMax: null,
     piecesMin: null, piecesMax: null,
     ownerType: "all",
-    sites: ["leboncoin", "pap"],
+    sites: ["bienici", "leboncoin"],
     motsExclus: [],
     messageModele: DEFAULT_MESSAGE,
     contactAuto: false
@@ -151,6 +151,20 @@
   };
 
   const SITE_BUILDERS = {
+    // Bien'ici : source de la veille automatique (API accessible).
+    bienici(c) {
+      const kind = c.transaction === "vente" ? "achat" : "location";
+      const bien = c.typeBien.includes("maison") && !c.typeBien.includes("appartement")
+        ? "maison" : "appartement";
+      const slug = (c.villes[0] || "").toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const p = new URLSearchParams();
+      if (c.prixMax) p.set("prix-max", c.prixMax);
+      if (c.surfaceMin) p.set("surface-min", c.surfaceMin);
+      if (c.piecesMin) p.set("pieces-min", c.piecesMin);
+      const q = p.toString();
+      return `https://www.bienici.com/recherche/${kind}/${slug || "france"}/${bien}` + (q ? "?" + q : "");
+    },
     // Leboncoin : paramètres propres et fiables.
     leboncoin(c) {
       const p = new URLSearchParams();
@@ -191,8 +205,9 @@
     }
   };
 
-  const SITE_NAMES = { leboncoin: "Leboncoin", pap: "PAP", seloger: "SeLoger" };
+  const SITE_NAMES = { bienici: "Bien'ici", leboncoin: "Leboncoin", pap: "PAP", seloger: "SeLoger" };
   const SITE_NOTE = {
+    bienici: "Source de la veille automatique : ces annonces sont aussi récupérées seules dans l'onglet Annonces.",
     pap: "Filtres prix/surface à affiner sur place (PAP n'accepte pas de paramètres d'URL fiables).",
     seloger: "SeLoger utilise des codes de lieu internes : la localisation peut nécessiter un ajustement."
   };

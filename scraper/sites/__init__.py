@@ -1,7 +1,9 @@
+from .bienici import Bienici
 from .leboncoin import Leboncoin
 from .pap import Pap
 
 ADAPTERS = {
+    "bienici": Bienici,
     "leboncoin": Leboncoin,
     "pap": Pap,
 }

@@ -13,10 +13,13 @@ recherches filtrées, suit les nouvelles annonces et prépare vos messages de co
 
 | Fonction | Fiabilité | Détail |
 |---|---|---|
-| **Générateur d'URL filtrées** | ✅ Très fiable | Vos critères → URL de recherche réelles (surtout Leboncoin) |
-| **Veille périodique** | ⚠️ Selon anti-bots | GitHub Actions (cron) récupère les annonces toutes les 3 h |
+| **Veille automatique (Bien'ici)** | ✅ Fonctionnelle | L'API publique de Bien'ici (agences + particuliers, locations & ventes) répond depuis les runners GitHub → vraies annonces récupérées toutes les 3 h |
+| **Générateur d'URL filtrées** | ✅ Très fiable | Vos critères → URL de recherche réelles (Bien'ici, Leboncoin) |
 | **Tableau de bord + badge « nouveau »** | ✅ | Annonces stockées dans `data/listings.json` |
 | **Contact semi-automatique** | ✅ | Message pré-rédigé + ouverture en un clic (mailto / annonce) |
+| **Leboncoin / PAP / SeLoger** | ⚠️ Manuel | Protégés par anti-bots (DataDome) → non scrapables en CI, mais URL filtrées générées pour ouverture manuelle |
+
+> **Source de la veille : Bien'ici.** Testé de bout en bout (50 annonces réelles récupérées et affichées). Leboncoin, PAP et SeLoger bloquent le scraping depuis les serveurs ; ils restent disponibles via le générateur de recherches filtrées.
 
 ## Pourquoi cette architecture ?
 

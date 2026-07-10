@@ -9,3 +9,8 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# Test local (Playwright)
+node_modules/
+package.json
+package-lock.json

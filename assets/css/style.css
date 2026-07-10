@@ -129,3 +129,7 @@ textarea{resize:vertical}
 .modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);
   font-size:1.1rem;cursor:pointer}
 .foot{color:var(--muted);font-size:.82rem;text-align:center;padding:20px 0 40px}
+
+/* badge "veille auto" sur le choix de site */
+.tag-auto{background:var(--accent-2);color:#052e16;font-size:.66rem;font-weight:800;
+  padding:1px 6px;border-radius:999px;margin-left:2px;vertical-align:middle}

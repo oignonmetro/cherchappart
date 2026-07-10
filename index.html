@@ -92,10 +92,12 @@
         <div class="field span-2">
           <label>Sites à surveiller</label>
           <div class="checks">
+            <label><input type="checkbox" class="site" value="bienici" checked /> Bien'ici <span class="tag-auto">veille auto ✓</span></label>
             <label><input type="checkbox" class="site" value="leboncoin" checked /> Leboncoin</label>
-            <label><input type="checkbox" class="site" value="pap" checked /> PAP</label>
+            <label><input type="checkbox" class="site" value="pap" /> PAP</label>
             <label><input type="checkbox" class="site" value="seloger" /> SeLoger</label>
           </div>
+          <small>Bien'ici alimente la <strong>veille automatique</strong> (annonces récupérées seules). Leboncoin / PAP / SeLoger servent aux <strong>recherches filtrées</strong> à ouvrir manuellement (anti-bots).</small>
         </div>
 
         <div class="field span-2">
@@ -147,6 +149,7 @@
         <input type="search" id="filter-text" placeholder="Filtrer par mot…" />
         <select id="filter-site">
           <option value="">Tous les sites</option>
+          <option value="bienici">Bien'ici</option>
           <option value="leboncoin">Leboncoin</option>
           <option value="pap">PAP</option>
           <option value="seloger">SeLoger</option>
