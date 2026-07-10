@@ -1,0 +1,24 @@
+name: Probe anti-bot (jetable)
+
+# Teste si un navigateur headless (Playwright) sur un runner GitHub peut charger
+# la 1re page des recherches Leboncoin/PAP/SeLoger malgré DataDome. Diagnostic
+# uniquement (n'écrit rien). Déclenchement manuel.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Installer Playwright + Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i playwright@latest >/dev/null 2>&1
+          npx playwright install --with-deps chromium
+      - name: Lancer le probe
+        run: node .github/probe/probe-antibot.mjs
