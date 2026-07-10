@@ -93,29 +93,46 @@ const excluded = (l, mots = []) => {
   return mots.some((m) => m && hay.includes(m.toLowerCase()));
 };
 
+const PAGE_SIZE = 60;
+const MAX_PAGES = Number(process.env.BIENICI_MAX_PAGES || 4); // jusqu'à 240 annonces récentes
+
+function mapAd(ad, unit) {
+  const ph = ad.photos && ad.photos[0];
+  return {
+    external_id: String(ad.id),
+    title: ad.title || (ad.description || "").slice(0, 80) || "Annonce Bien'ici",
+    url: `https://www.bienici.com/annonce/${ad.id}`,
+    price: typeof ad.price === "number"
+      ? Math.round(ad.price).toLocaleString("fr-FR") + unit : "",
+    surface: ad.surfaceArea ? Math.round(ad.surfaceArea) : null,
+    rooms: ad.roomsQuantity || null,
+    location: [ad.city, ad.postalCode].filter(Boolean).join(" "),
+    image: ph ? (ph.url_photo || ph.url || "") : "",
+    source: "bienici",
+  };
+}
+
 async function searchBienici(c) {
   const zones = await resolveZones(c.villes || []);
-  const filters = buildFilters(c, zones);
-  const url = `${SEARCH}?filters=${encodeURIComponent(JSON.stringify(filters))}`;
-  const r = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!r.ok) throw new Error(`Bien'ici HTTP ${r.status}`);
-  const data = await r.json();
   const unit = c.transaction === "vente" ? " €" : " €/mois";
-  return (data.realEstateAds || []).map((ad) => {
-    const ph = ad.photos && ad.photos[0];
-    return {
-      external_id: String(ad.id),
-      title: ad.title || (ad.description || "").slice(0, 80) || "Annonce Bien'ici",
-      url: `https://www.bienici.com/annonce/${ad.id}`,
-      price: typeof ad.price === "number"
-        ? Math.round(ad.price).toLocaleString("fr-FR") + unit : "",
-      surface: ad.surfaceArea ? Math.round(ad.surfaceArea) : null,
-      rooms: ad.roomsQuantity || null,
-      location: [ad.city, ad.postalCode].filter(Boolean).join(" "),
-      image: ph ? (ph.url_photo || ph.url || "") : "",
-      source: "bienici",
-    };
-  });
+  const byId = new Map();
+
+  // Pagination : on parcourt plusieurs pages pour capter davantage d'annonces récentes.
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const filters = buildFilters(c, zones);
+    filters.page = page;
+    filters.from = (page - 1) * PAGE_SIZE;
+    const url = `${SEARCH}?filters=${encodeURIComponent(JSON.stringify(filters))}`;
+    const r = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!r.ok) {
+      if (page === 1) throw new Error(`Bien'ici HTTP ${r.status}`);
+      break; // on garde ce qu'on a déjà
+    }
+    const ads = (await r.json()).realEstateAds || [];
+    for (const ad of ads) byId.set(String(ad.id), mapAd(ad, unit));
+    if (ads.length < PAGE_SIZE) break; // dernière page atteinte
+  }
+  return [...byId.values()];
 }
 
 /* ---------------- Notifications ---------------- */
