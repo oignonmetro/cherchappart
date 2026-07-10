@@ -55,7 +55,7 @@
     t.classList.add("is-active");
     $("#panel-" + t.dataset.tab).classList.add("is-active");
     if (t.dataset.tab === "recherches") renderSearchLinks();
-    if (t.dataset.tab === "annonces") renderListings();
+    if (t.dataset.tab === "annonces") refreshAnnonces();
   }));
 
   /* ---------- Formulaire -> état ---------- */
@@ -233,17 +233,103 @@
     }).join("");
   }
 
-  /* ---------- Annonces ---------- */
+  /* ---------- Annonces : recherche EN DIRECT sur Bien'ici, avec VOS critères ----------
+     Chaque utilisateur interroge Bien'ici depuis son navigateur avec ses propres
+     critères (l'API autorise le CORS). Rien n'est imposé ni partagé entre visiteurs. */
   let ALL = [];
+  let searching = false;
+  const zoneCache = {};
+
+  async function resolveZones(villes) {
+    const ids = [];
+    for (const ville of villes) {
+      const key = ville.toLowerCase().trim();
+      if (!key) continue;
+      if (zoneCache[key]) { ids.push(...zoneCache[key]); continue; }
+      try {
+        const r = await fetch("https://res.bienici.com/suggest.json?q=" + encodeURIComponent(ville));
+        if (!r.ok) continue;
+        const arr = await r.json();
+        let picked = arr.find((x) => ["city", "arrondissement", "department", "postalCode"].includes(x.type)
+          && (x.name || "").toLowerCase().startsWith(key.slice(0, 4)));
+        picked = picked || arr[0];
+        const z = (picked && picked.zoneIds) || [];
+        zoneCache[key] = z; ids.push(...z);
+      } catch { /* ville non résolue : ignorée */ }
+    }
+    return [...new Set(ids)];
+  }
+
+  function bieniciFilters(c, zoneIds) {
+    const map = { appartement: "flat", maison: "house" };
+    const types = (c.typeBien || []).map((t) => map[t]).filter(Boolean);
+    const f = {
+      size: 60, from: 0, page: 1,
+      filterType: c.transaction === "vente" ? "buy" : "rent",
+      propertyType: types.length ? types : ["flat"],
+      sortBy: "publicationDate", sortOrder: "desc",
+      onTheMarketTypes: c.ownerType === "private" ? ["by-individuals"]
+        : c.ownerType === "pro" ? ["with-agencies"] : ["with-agencies", "by-individuals"],
+    };
+    if (zoneIds.length) f.zoneIdsByTypes = { zoneIds };
+    if (c.prixMin != null) f.minPrice = c.prixMin;
+    if (c.prixMax != null) f.maxPrice = c.prixMax;
+    if (c.surfaceMin != null) f.minArea = c.surfaceMin;
+    if (c.surfaceMax != null) f.maxArea = c.surfaceMax;
+    if (c.piecesMin != null) f.minRooms = c.piecesMin;
+    if (c.piecesMax != null) f.maxRooms = c.piecesMax;
+    return f;
+  }
+
+  async function bieniciSearch(c) {
+    const zones = await resolveZones(c.villes || []);
+    const filters = bieniciFilters(c, zones);
+    const url = "https://www.bienici.com/realEstateAds.json?filters=" + encodeURIComponent(JSON.stringify(filters));
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    const unit = c.transaction === "vente" ? " €" : " €/mois";
+    lastTotal = data.total || 0;
+    return (data.realEstateAds || []).map((ad) => {
+      const ph = ad.photos && ad.photos[0];
+      const image = ph ? (ph.url_photo || ph.url || "") : "";
+      const price = typeof ad.price === "number"
+        ? Math.round(ad.price).toLocaleString("fr-FR").replace(/ /g, " ") + unit : "";
+      return {
+        id: "bienici-" + ad.id,
+        source: "bienici",
+        title: ad.title || (ad.description || "").slice(0, 80) || "Annonce Bien'ici",
+        url: "https://www.bienici.com/annonce/" + ad.id,
+        price,
+        surface: ad.surfaceArea ? Math.round(ad.surfaceArea) : null,
+        rooms: ad.roomsQuantity || null,
+        location: [ad.city, ad.postalCode].filter(Boolean).join(" "),
+        image,
+      };
+    });
+  }
+
+  let lastTotal = 0;
+  function setSearchStatus(txt) { const el = $("#search-status"); if (el) el.textContent = txt; }
 
   async function loadListings() {
+    if (searching) return;
+    searching = true;
+    setSearchStatus("Recherche en direct sur Bien'ici…");
     try {
-      const res = await fetch("data/listings.json?_=" + Date.now());
-      if (!res.ok) throw new Error(res.status);
-      const data = await res.json();
-      ALL = Array.isArray(data) ? data : (data.listings || []);
-    } catch { ALL = []; }
+      readForm();
+      ALL = await bieniciSearch(criteria);
+      const h = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+      setSearchStatus(`${ALL.length} affichée(s)${lastTotal ? " sur " + lastTotal.toLocaleString("fr-FR") : ""} · à jour ${h}`);
+    } catch (e) {
+      ALL = [];
+      setSearchStatus("Bien'ici injoignable (" + e.message + "). Réessayez.");
+    } finally {
+      searching = false;
+    }
   }
+
+  async function refreshAnnonces() { await loadListings(); renderListings(); }
 
   function matches(l, c) {
     if (c.motsExclus?.length) {
@@ -258,11 +344,9 @@
     const emptyEl = $("#listings-empty");
     const seen = seenSet();
     const q = $("#filter-text").value.trim().toLowerCase();
-    const site = $("#filter-site").value;
     const onlyNew = $("#only-new").checked;
 
     let items = ALL.filter((l) => matches(l, criteria));
-    if (site) items = items.filter((l) => l.source === site);
     if (q) items = items.filter((l) =>
       (l.title + " " + (l.location || "") + " " + (l.price || "")).toLowerCase().includes(q));
     if (onlyNew) items = items.filter((l) => !seen.has(l.id));
@@ -277,7 +361,7 @@
       emptyEl.hidden = false;
       emptyEl.textContent = ALL.length
         ? "Aucune annonce ne correspond au filtre."
-        : "Aucune annonce pour le moment. La veille (GitHub Actions) remplira data/listings.json.";
+        : "Aucune annonce. Réglez vos critères (onglet Critères) puis cliquez sur ↻ Rafraîchir.";
       return;
     }
     emptyEl.hidden = true;
@@ -319,14 +403,19 @@
   }
 
   $("#filter-text").addEventListener("input", renderListings);
-  $("#filter-site").addEventListener("change", renderListings);
   $("#only-new").addEventListener("change", renderListings);
+  $("#refresh-btn").addEventListener("click", refreshAnnonces);
   $("#mark-seen").addEventListener("click", () => {
     const set = seenSet();
     ALL.forEach((l) => set.add(l.id));
     saveSeen(set);
     renderListings();
   });
+
+  // Vérification automatique : re-recherche périodique tant que l'onglet Annonces est ouvert.
+  setInterval(() => {
+    if ($("#panel-annonces").classList.contains("is-active") && !document.hidden) refreshAnnonces();
+  }, 180000);
 
   /* ---------- Modal contact ---------- */
   function buildMessage(l) {
@@ -364,5 +453,4 @@
 
   /* ---------- Init ---------- */
   fillForm();
-  loadListings().then(renderListings);
 })();

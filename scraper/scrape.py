@@ -27,8 +27,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 log = logging.getLogger("scrape")
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-CRITERIA_PATH = ROOT / "data" / "criteria.json"
-LISTINGS_PATH = ROOT / "data" / "listings.json"
+CRITERIA_PATH = ROOT / "scraper" / "criteria.example.json"
+LISTINGS_PATH = ROOT / "listings.json"
 MAX_KEEP = 500  # taille max de l'historique conservé
 
 

@@ -1,11 +1,11 @@
 # 🏠 ChercheAppart
 
-Veille automatique d'annonces immobilières (Leboncoin, PAP, SeLoger…) hébergeable
-**gratuitement sur GitHub Pages**. Vous définissez vos critères, l'outil génère les
-recherches filtrées, suit les nouvelles annonces et prépare vos messages de contact.
+Recherche et veille d'annonces immobilières hébergeable **gratuitement sur GitHub
+Pages**. Chaque utilisateur définit **ses propres critères** ; l'outil interroge
+Bien'ici **en direct depuis le navigateur**, suit les nouvelles annonces et prépare
+les messages de contact. Aucun réglage n'est imposé, aucune donnée n'est partagée.
 
-👉 **Interface** : une page statique (GitHub Pages)
-👉 **Moteur** : un workflow GitHub Actions planifié qui récupère les annonces
+👉 **100 % statique et par-utilisateur** : les critères restent dans votre navigateur.
 
 ---
 
@@ -13,38 +13,38 @@ recherches filtrées, suit les nouvelles annonces et prépare vos messages de co
 
 | Fonction | Fiabilité | Détail |
 |---|---|---|
-| **Veille automatique (Bien'ici)** | ✅ Fonctionnelle | L'API publique de Bien'ici (agences + particuliers, locations & ventes) répond depuis les runners GitHub → vraies annonces récupérées toutes les 3 h |
+| **Recherche en direct (Bien'ici)** | ✅ Fonctionnelle | Le navigateur interroge l'API publique de Bien'ici (locations & ventes, agences + particuliers) avec **vos** critères. CORS ouvert → aucun serveur nécessaire |
+| **Re-vérification automatique** | ✅ | Tant que l'onglet Annonces est ouvert, une recherche est relancée toutes les 3 min ; les nouveautés sont marquées « nouveau » |
 | **Générateur d'URL filtrées** | ✅ Très fiable | Vos critères → URL de recherche réelles (Bien'ici, Leboncoin) |
-| **Tableau de bord + badge « nouveau »** | ✅ | Annonces stockées dans `data/listings.json` |
 | **Contact semi-automatique** | ✅ | Message pré-rédigé + ouverture en un clic (mailto / annonce) |
-| **Leboncoin / PAP / SeLoger** | ⚠️ Manuel | Protégés par anti-bots (DataDome) → non scrapables en CI, mais URL filtrées générées pour ouverture manuelle |
-
-> **Source de la veille : Bien'ici.** Testé de bout en bout (50 annonces réelles récupérées et affichées). Leboncoin, PAP et SeLoger bloquent le scraping depuis les serveurs ; ils restent disponibles via le générateur de recherches filtrées.
+| **Leboncoin / PAP / SeLoger** | ⚠️ Manuel | Protégés par anti-bots (DataDome) → non récupérables automatiquement, mais URL filtrées générées pour ouverture manuelle |
 
 ## Pourquoi cette architecture ?
 
-GitHub Pages est **statique** : la page ne peut ni tourner en fond, ni interroger
-Leboncoin/SeLoger directement (blocage **CORS** + anti-bots). La veille « régulière »
-est donc assurée par **GitHub Actions**, qui joue le rôle de serveur gratuit :
+GitHub Pages est **statique**. La clé : l'API de Bien'ici renvoie
+`Access-Control-Allow-Origin: *`, donc **le navigateur de chaque visiteur peut
+l'interroger directement** avec ses propres critères. Résultat : pas de serveur, pas
+de fichier de critères commun, pas de données partagées entre utilisateurs.
 
 ```
-Vos critères (interface)
-      │  export
-      ▼
-data/criteria.json ──►  GitHub Actions (cron toutes les 3h)  ──► scraper/scrape.py
-                                                                      │
-                              data/listings.json  ◄── commit ─────────┘
-                                     │
-                                     ▼
-                       GitHub Pages (tableau de bord)
+Vos critères (dans VOTRE navigateur, localStorage)
+        │
+        ▼
+  fetch() direct  ──►  API Bien'ici (suggest.json + realEstateAds.json)
+        │                     (CORS: Access-Control-Allow-Origin: *)
+        ▼
+  Tableau de bord Annonces (le vôtre uniquement)
 ```
+
+> Leboncoin, PAP et SeLoger bloquent l'accès automatisé (DataDome) : ils restent
+> accessibles via les **URL de recherche filtrées** générées (onglet Recherches).
 
 ## Pourquoi pas de contact 100 % automatique ?
 
-Envoyer des messages automatisés sur Leboncoin/SeLoger/PAP **enfreint leurs CGU**
-et déclenche leurs protections anti-robot (blocage de compte). ChercheAppart fait
-du **contact semi-automatique** : le message est pré-rempli depuis votre modèle et
-ouvert en un clic — **vous validez l'envoi**. Conforme, fiable, sans risque de ban.
+Envoyer des messages automatisés sur ces plateformes **enfreint leurs CGU** et
+déclenche leurs anti-robots (blocage de compte). ChercheAppart fait du **contact
+semi-automatique** : message pré-rempli depuis votre modèle, ouvert en un clic —
+**vous validez l'envoi**.
 
 ---
 
@@ -52,63 +52,52 @@ ouvert en un clic — **vous validez l'envoi**. Conforme, fiable, sans risque de
 
 1. **Forkez / créez** ce dépôt sur votre compte GitHub.
 2. **Activez GitHub Pages** : `Settings ▸ Pages ▸ Source : GitHub Actions`.
-3. **Activez les Actions** : `Settings ▸ Actions ▸ General ▸ Workflow permissions ▸
-   Read and write permissions` (nécessaire pour que la veille committe les annonces).
-4. Ouvrez le site publié, réglez vos critères, cliquez **⬇️ Exporter criteria.json**,
-   puis remplacez `data/criteria.json` dans le dépôt (commit).
-5. La veille tourne toute seule (ou lancez-la à la main : onglet **Actions ▸ Veille
-   des annonces ▸ Run workflow**).
+3. Ouvrez le site publié : réglez vos critères, ouvrez l'onglet **Annonces**. C'est tout.
+
+Rien à committer ni à configurer côté serveur : la recherche se fait dans le navigateur.
 
 ## Développement local
 
 ```bash
-# Interface : n'importe quel serveur statique
 python3 -m http.server 8000        # puis http://localhost:8000
-
-# Scraper
-pip install -r scraper/requirements.txt
-python scraper/scrape.py --dry-run  # test sans écriture
-python scraper/scrape.py            # met à jour data/listings.json
 ```
 
-## Fiabilité du scraping & solutions de contournement
+## Veille côté serveur (optionnel, avancé)
 
-Les runners GitHub utilisent des IP de datacenter, souvent bloquées par les
-anti-bots (DataDome sur Leboncoin). Les adaptateurs **échouent proprement**
-(liste vide + log) : le reste de l'outil continue de fonctionner, et l'URL de
-recherche filtrée reste toujours disponible.
+Le dossier `scraper/` fournit un **outil en ligne de commande** facultatif (Python)
+pour ceux qui veulent une veille en arrière-plan sur **leur propre** machine/serveur
+(ex. envoi d'alertes). Il n'est pas nécessaire au fonctionnement du site.
 
-Pour une récupération robuste, branchez dans les adaptateurs (`scraper/sites/`) :
+```bash
+pip install -r scraper/requirements.txt
+python scraper/scrape.py --criteria scraper/criteria.example.json --out listings.json
+```
 
-- un **proxy résidentiel** (variable d'env → `session.proxies`) ;
-- ou une **API tierce** de scraping (clé dans les *Secrets* du dépôt) ;
-- ou remplacez la source par les **alertes email/RSS natives** des sites.
+L'adaptateur Bien'ici (`scraper/sites/bienici.py`) fonctionne depuis un serveur ;
+Leboncoin/PAP échouent proprement (anti-bots). Pour les débloquer, branchez un proxy
+résidentiel ou une API tierce dans les adaptateurs.
 
 ## Structure
 
 ```
-index.html                 Interface (onglets Critères / Recherches / Annonces)
+index.html                 Interface (onglets Critères / Recherches / Annonces / À propos)
 assets/css/style.css        Styles (thème clair & sombre)
-assets/js/app.js            Logique front : critères, URL, tableau de bord, contact
-data/criteria.json          Vos critères (utilisés par la veille)
-data/listings.json          Annonces récupérées (mises à jour par Actions)
-scraper/scrape.py           Orchestrateur de la veille
-scraper/sites/              Adaptateurs par site (base, leboncoin, pap…)
-.github/workflows/          Cron de veille + déploiement Pages
+assets/js/app.js            Logique : critères, recherche Bien'ici en direct, contact
+.github/workflows/pages.yml Déploiement GitHub Pages
+scraper/                    Veille CLI optionnelle (Python) + adaptateurs par site
 ```
 
-## Étendre à un nouveau site
+## Étendre à un nouveau site (interface)
 
-Créez `scraper/sites/monsite.py` héritant de `SiteAdapter`
-(`search_url` + `fetch`), puis enregistrez-le dans
-`scraper/sites/__init__.py` (dict `ADAPTERS`). Ajoutez la case correspondante
-dans `SITE_BUILDERS` de `assets/js/app.js` pour l'URL côté interface.
+Ajoutez une entrée dans `SITE_BUILDERS` de `assets/js/app.js` pour générer l'URL de
+recherche filtrée. Pour une récupération en direct dans le tableau de bord, il faut
+une API tierce autorisant le CORS (comme Bien'ici) — voir `bieniciSearch()`.
 
 ## Avertissement légal
 
-Cet outil est fourni à titre éducatif. Respectez les CGU et le `robots.txt` des
-sites, le RGPD et la législation applicable. N'automatisez pas l'envoi de messages
-en violation des conditions d'utilisation des plateformes.
+Outil fourni à titre éducatif. Respectez les CGU et le `robots.txt` des sites, le
+RGPD et la législation applicable. N'automatisez pas l'envoi de messages en
+violation des conditions d'utilisation des plateformes.
 
 ## Licence
 

@@ -26,7 +26,7 @@
     <!-- ============ CRITÈRES ============ -->
     <section id="panel-criteres" class="panel is-active" role="tabpanel">
       <h1>Vos critères de recherche</h1>
-      <p class="lead">Ces critères sont enregistrés dans votre navigateur. Exportez-les en <code>criteria.json</code> pour que la veille automatique (GitHub Actions) les utilise.</p>
+      <p class="lead">Ces critères restent dans <strong>votre navigateur</strong> et pilotent la recherche en direct de l'onglet <strong>Annonces</strong>. Rien n'est partagé avec les autres utilisateurs. (L'export <code>criteria.json</code> ne sert qu'à la veille CLI optionnelle.)</p>
 
       <form id="criteria-form" class="card grid">
         <div class="field span-2">
@@ -92,12 +92,12 @@
         <div class="field span-2">
           <label>Sites à surveiller</label>
           <div class="checks">
-            <label><input type="checkbox" class="site" value="bienici" checked /> Bien'ici <span class="tag-auto">veille auto ✓</span></label>
+            <label><input type="checkbox" class="site" value="bienici" checked /> Bien'ici <span class="tag-auto">temps réel ✓</span></label>
             <label><input type="checkbox" class="site" value="leboncoin" checked /> Leboncoin</label>
             <label><input type="checkbox" class="site" value="pap" /> PAP</label>
             <label><input type="checkbox" class="site" value="seloger" /> SeLoger</label>
           </div>
-          <small>Bien'ici alimente la <strong>veille automatique</strong> (annonces récupérées seules). Leboncoin / PAP / SeLoger servent aux <strong>recherches filtrées</strong> à ouvrir manuellement (anti-bots).</small>
+          <small>Bien'ici alimente le <strong>tableau de bord Annonces</strong> (recherche en direct selon vos critères, propre à vous). Leboncoin / PAP / SeLoger servent aux <strong>recherches filtrées</strong> à ouvrir manuellement (leurs anti-bots empêchent la récupération automatique).</small>
         </div>
 
         <div class="field span-2">
@@ -144,19 +144,14 @@
     <!-- ============ ANNONCES ============ -->
     <section id="panel-annonces" class="panel" role="tabpanel">
       <h1>Annonces trouvées</h1>
-      <p class="lead">Récupérées par la veille automatique (fichier <code>data/listings.json</code>). Les nouvelles depuis votre dernière visite sont marquées <span class="badge inline">nouveau</span>.</p>
+      <p class="lead">Recherchées <strong>en direct sur Bien'ici selon VOS critères</strong> (rien n'est partagé entre utilisateurs). Actualisées automatiquement tant que cet onglet est ouvert ; les nouvelles depuis votre dernière visite sont marquées <span class="badge inline">nouveau</span>.</p>
       <div class="toolbar">
+        <button id="refresh-btn" class="btn primary small">↻ Rafraîchir</button>
         <input type="search" id="filter-text" placeholder="Filtrer par mot…" />
-        <select id="filter-site">
-          <option value="">Tous les sites</option>
-          <option value="bienici">Bien'ici</option>
-          <option value="leboncoin">Leboncoin</option>
-          <option value="pap">PAP</option>
-          <option value="seloger">SeLoger</option>
-        </select>
         <label class="only-new"><input type="checkbox" id="only-new" /> Nouvelles seulement</label>
         <button id="mark-seen" class="btn ghost small">Tout marquer comme vu</button>
       </div>
+      <p id="search-status" class="save-status" style="margin:-6px 0 14px"></p>
       <div id="listings" class="listings"></div>
       <p id="listings-empty" class="empty" hidden></p>
     </section>
@@ -165,17 +160,19 @@
     <section id="panel-apropos" class="panel" role="tabpanel">
       <h1>Comment ça marche</h1>
       <div class="card prose">
-        <h3>Architecture</h3>
+        <h3>Vos critères, rien que les vôtres</h3>
+        <p>ChercheAppart n'impose aucun réglage commun. Vos critères sont enregistrés <strong>dans votre navigateur</strong> et l'onglet <strong>Annonces</strong> interroge Bien'ici <strong>en direct, avec vos critères à vous</strong> — deux utilisateurs voient des résultats différents. Aucune donnée n'est partagée ni stockée sur un serveur.</p>
+        <h3>Comment fonctionne la vérification automatique</h3>
         <ul>
-          <li><strong>Cette page (GitHub Pages)</strong> — interface statique : critères, génération des recherches filtrées, tableau de bord des annonces, brouillons de contact.</li>
-          <li><strong>GitHub Actions (le moteur)</strong> — un workflow planifié (cron) exécute le scraper toutes les quelques heures, récupère les annonces correspondant à <code>data/criteria.json</code> et met à jour <code>data/listings.json</code>. C'est ce qui permet la veille « régulière » sans serveur.</li>
+          <li><strong>Recherche en direct</strong> — à l'ouverture de l'onglet Annonces et via ↻ Rafraîchir, votre navigateur appelle l'API publique de Bien'ici (locations & ventes, agences + particuliers) avec vos filtres.</li>
+          <li><strong>Re-vérification régulière</strong> — tant que l'onglet reste ouvert, une nouvelle recherche est lancée automatiquement toutes les 3 minutes ; les annonces jamais vues sont marquées <span class="badge inline">nouveau</span>.</li>
         </ul>
-        <h3>Contact automatique : le choix responsable</h3>
-        <p>Envoyer des messages de façon totalement automatisée sur Leboncoin, SeLoger ou PAP enfreint leurs conditions d'utilisation et leurs protections anti-robot. ChercheAppart fait donc du <strong>contact semi-automatique</strong> : le message est <em>pré-rédigé</em> depuis votre modèle et ouvert en un clic (mailto ou page de l'annonce) — <strong>vous validez l'envoi</strong>. C'est fiable, conforme, et ça évite les blocages de compte.</p>
+        <h3>Contact : le choix responsable</h3>
+        <p>Envoyer des messages de façon totalement automatisée enfreint les CGU des plateformes et leurs anti-robots. ChercheAppart fait du <strong>contact semi-automatique</strong> : message <em>pré-rédigé</em> depuis votre modèle, ouvert en un clic (mailto ou page de l'annonce) — <strong>vous validez l'envoi</strong>.</p>
         <h3>Limites honnêtes</h3>
         <ul>
-          <li>Les sites protègent leurs pages ; le scraping peut être bloqué depuis les serveurs GitHub. Le scraper est conçu pour échouer proprement et se brancher sur un proxy / une API si besoin (voir le <code>README</code>).</li>
-          <li>Le générateur d'URL est, lui, 100 % fiable — c'est le socle recommandé au quotidien.</li>
+          <li>La re-vérification automatique fonctionne <strong>tant que l'onglet est ouvert</strong>. Une veille en arrière-plan (page fermée) nécessiterait un serveur par utilisateur — hors périmètre d'un site statique.</li>
+          <li><strong>Leboncoin / PAP / SeLoger</strong> bloquent l'accès automatique (anti-bots) : ils restent disponibles via les <strong>URL de recherche filtrées</strong> (onglet Recherches), 100 % fiables, à ouvrir manuellement.</li>
         </ul>
       </div>
     </section>
