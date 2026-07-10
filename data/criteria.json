@@ -1,0 +1,16 @@
+{
+  "villes": ["Paris"],
+  "transaction": "location",
+  "typeBien": ["appartement"],
+  "prixMin": null,
+  "prixMax": 1200,
+  "surfaceMin": 25,
+  "surfaceMax": null,
+  "piecesMin": 1,
+  "piecesMax": null,
+  "ownerType": "all",
+  "sites": ["leboncoin", "pap"],
+  "motsExclus": ["colocation", "sous-location"],
+  "messageModele": "Bonjour,\n\nVotre annonce « {{titre}} » ({{prix}}) à {{ville}} m'intéresse. Serait-il possible d'organiser une visite ?\n\nLien : {{lien}}\n\nCordialement,",
+  "contactAuto": false
+}
