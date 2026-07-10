@@ -36,7 +36,7 @@ jobs:
       - if: steps.cfg.outputs.run == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"          # supabase-js requiert le WebSocket natif (Node 22+)
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
