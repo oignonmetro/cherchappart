@@ -144,4 +144,18 @@
     const { error } = await sb.from("email_sources").delete().eq("id", id).eq("user_id", Cloud.user.id);
     if (error) throw error;
   };
+
+  /* ---- Extension navigateur (handshake de session) ---- */
+  Cloud.exportSessionToExtension = async () => {
+    if (!Cloud.user) throw new Error("Connectez-vous d'abord.");
+    const { data } = await sb.auth.getSession();
+    if (!data.session) throw new Error("Session introuvable.");
+    const session = {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at,
+      user: { id: data.session.user.id, email: data.session.user.email },
+    };
+    window.postMessage({ source: "chercheappart-site", type: "chercheappart:export-session", session }, window.location.origin);
+  };
 })();

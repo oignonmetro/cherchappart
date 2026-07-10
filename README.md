@@ -18,7 +18,8 @@ les messages de contact. Aucun réglage n'est imposé, aucune donnée n'est part
 | **Générateur d'URL filtrées** | ✅ Très fiable | Vos critères → URL de recherche réelles (Bien'ici, Leboncoin) |
 | **Contact semi-automatique** | ✅ | Message pré-rédigé + ouverture en un clic (mailto / annonce) |
 | **Veille serveur + alertes push** | ✅ Option gratuite | Backend Supabase + cron GitHub Actions : la veille tourne **en arrière-plan, par utilisateur, app fermée**, et notifie chaque nouvelle annonce. Voir [`SETUP.md`](SETUP.md) |
-| **Leboncoin / PAP / SeLoger** | ⚠️ Manuel | Protégés par anti-bots (DataDome) → non récupérables automatiquement, mais URL filtrées générées pour ouverture manuelle |
+| **Alertes Leboncoin / PAP / SeLoger (e-mail)** | ✅ Option gratuite | Lit vos propres alertes e-mail de ces sites (par utilisateur), sans scraping — conforme aux CGU. Voir [`SETUP.md`](SETUP.md#6-option-alertes-leboncoin--pap--seloger--sans-scraping) |
+| **Extension navigateur (Leboncoin/PAP/SeLoger)** | ✅ Option gratuite | Surveille vos recherches sauvegardées depuis **votre propre navigateur** (vos cookies), en complément de l'e-mail, pour une détection plus rapide. Voir [`SETUP.md`](SETUP.md#7-option-extension-navigateur--détection-quasi-instantanée) |
 
 ## Deux modes
 
@@ -89,7 +90,12 @@ résidentiel ou une API tierce dans les adaptateurs.
 index.html                 Interface (onglets Critères / Recherches / Annonces / À propos)
 assets/css/style.css        Styles (thème clair & sombre)
 assets/js/app.js            Logique : critères, recherche Bien'ici en direct, contact
+assets/js/cloud.js          Compte, veille serveur, boîte e-mail, extension (optionnel)
 .github/workflows/pages.yml Déploiement GitHub Pages
+.github/workflows/veille.yml Veille serveur (Bien'ici + e-mail), optionnelle
+backend/                    Worker de veille serveur (Node) + ingestion e-mail
+supabase/schema.sql         Schéma de la base (comptes, recherches, annonces, RLS)
+extension/                  Extension navigateur optionnelle (Leboncoin/PAP/SeLoger)
 scraper/                    Veille CLI optionnelle (Python) + adaptateurs par site
 ```
 

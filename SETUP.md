@@ -87,12 +87,54 @@ configuré une boîte — les e-mails d'alerte non lus, en extrait les annonces,
 les dédoublonne et envoie le **même push** que Bien'ici. Les e-mails lus sont
 marqués comme tels ; vous n'avez jamais besoin d'ouvrir cette boîte vous-même.
 
+## 7. (Option) Extension navigateur — détection quasi instantanée
+
+Complément de l'e-mail : une extension qui tourne dans **votre propre navigateur**
+(vos cookies, votre IP) surveille vos recherches sauvegardées Leboncoin/PAP/SeLoger
+à intervalle court (15 min par défaut, réglable). Comme c'est une navigation
+normale de votre part, DataDome n'a aucune raison de la bloquer — contrairement à
+un serveur. Gratuit, aucune installation de dépendance.
+
+**⚠️ Note de transparence :** l'algorithme d'extraction est générique et tolérant
+(repère les liens de fiche-annonce par motif d'URL, comme pour les e-mails) et a
+été testé sur des pages construites pour simuler une liste d'annonces. Il n'a pas
+pu être validé contre le HTML réel de Leboncoin/SeLoger/PAP depuis cet
+environnement (ces sites bloquent aussi les requêtes sortantes d'ici). Un premier
+essai réel de votre part permettra d'ajuster si besoin — voir « Vérifier » ci-dessous.
+
+### Installation (extension non publiée : mode développeur)
+
+1. Ouvrez `chrome://extensions` (ou `edge://extensions`) → activez **Mode développeur**
+   (interrupteur en haut à droite).
+2. **Charger l'extension non empaquetée** → sélectionnez le dossier
+   [`extension/`](extension) de ce dépôt (téléchargez-le ou clonez le dépôt localement).
+3. Ouvrez le site ChercheAppart, connectez-vous, puis dans la carte Compte :
+   **🧩 Connecter l'extension** (le statut passe à « Extension détectée » puis
+   « Extension connectée »).
+4. Clic droit sur l'icône de l'extension → **Options** (ou `chrome://extensions` →
+   Détails → Options) :
+   - Sur Leboncoin/PAP/SeLoger, faites votre recherche filtrée, **sauvegardez-la**,
+     copiez son URL, collez-la dans « Recherches surveillées ».
+   - Réglez la fréquence (15 min par défaut).
+
+### Vérifier que ça fonctionne
+
+Ouvrez `chrome://extensions` → votre extension → **service worker** (lien
+« Inspecter les vues ») pour voir les logs, ou ouvrez la console (F12) sur une
+page Leboncoin/PAP/SeLoger : vous devez voir `ChercheAppart (site): N annonce(s)
+détectée(s)`. Si vous voyez `0 annonce détectée` sur une vraie page de résultats,
+dites-le-moi avec une capture — j'ajusterai l'extraction.
+
+Comme pour les e-mails, les annonces détectées apparaissent au prochain passage
+du serveur (≤ 30 min) sous forme de notification push (la clé d'envoi reste
+côté serveur, jamais dans l'extension).
+
 ## Notes
 
 - **iOS** : le Web Push exige d'**ajouter le site à l'écran d'accueil** (Safari ▸ Partager
   ▸ Sur l'écran d'accueil), puis d'activer les alertes depuis l'app installée.
 - **Coût** : tout est dans les paliers gratuits (Supabase Free, Actions gratuit pour dépôt
   public, Web Push gratuit). Aucune carte bancaire.
-- **Sources** : la veille interroge **Bien'ici** (agences + particuliers). Leboncoin /
-  SeLoger restent hors veille automatique (anti-bots) — disponibles via les URL de
-  recherche filtrées de l'onglet **Recherches**.
+- **Sources** : la veille interroge **Bien'ici** (agences + particuliers) automatiquement.
+  Leboncoin / PAP / SeLoger sont couverts par l'e-mail et/ou l'extension (options 6-7),
+  ou disponibles via les URL de recherche filtrées de l'onglet **Recherches**.

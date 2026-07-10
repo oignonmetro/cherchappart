@@ -113,9 +113,12 @@ async function readMailbox(src) {
 
 /**
  * @param supabase client service-role
- * @param notify   fonction (userId, newItems[]) => Promise pour le push unifié
+ *
+ * N'envoie plus de notification directement : insère les annonces (notified
+ * = false par défaut) ; c'est le dispatch unifié de veille.mjs qui s'en
+ * charge, en même temps que Bien'ici et l'extension navigateur.
  */
-export async function ingestEmails(supabase, notify) {
+export async function ingestEmails(supabase) {
   const { data: sources, error } = await supabase
     .from("email_sources").select("*").eq("active", true);
   if (error) { console.warn("email_sources:", error.message); return { new: 0 }; }
@@ -144,11 +147,10 @@ export async function ingestEmails(supabase, notify) {
       .select("data");
     if (insErr) { console.warn(`Insert e-mail ${src.imap_user}: ${insErr.message}`); continue; }
 
-    const newItems = (inserted || []).map((x) => x.data);
-    if (newItems.length) {
-      totalNew += newItems.length;
-      console.log(`  boîte ${src.imap_user}: +${newItems.length} nouvelle(s)`);
-      if (notify) await notify(src.user_id, newItems);
+    const newCount = (inserted || []).length;
+    if (newCount) {
+      totalNew += newCount;
+      console.log(`  boîte ${src.imap_user}: +${newCount} nouvelle(s)`);
     }
   }
   console.log(`Ingestion e-mail : ${totalNew} nouvelle(s) annonce(s).`);

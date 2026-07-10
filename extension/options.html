@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>ChercheAppart — Extension</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      max-width: 640px; margin: 24px auto; padding: 0 20px; line-height: 1.5; }
+    h1 { font-size: 1.3rem; }
+    .card { border: 1px solid #8884; border-radius: 12px; padding: 18px; margin-bottom: 18px; }
+    .row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
+    input, select { padding: 8px 10px; border-radius: 8px; border: 1px solid #8886; flex: 1; min-width: 160px; }
+    button { padding: 8px 14px; border-radius: 8px; border: 1px solid #8886; cursor: pointer; font: inherit; }
+    button.primary { background: #4f8cff; color: #fff; border-color: #4f8cff; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; justify-content: space-between; gap: 8px; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid #8882; }
+    li span { word-break: break-all; font-size: .85rem; }
+    small { color: #888; }
+    #status { font-weight: 600; }
+    #status.ok { color: #22c55e; }
+    #status.ko { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <h1>🧩 ChercheAppart — Extension</h1>
+
+  <div class="card">
+    <strong>Connexion</strong>
+    <p>Statut : <span id="status">…</span></p>
+    <small>Connectez-vous depuis le site ChercheAppart (bouton « Connecter l'extension »
+      dans la carte Compte).</small>
+  </div>
+
+  <div class="card">
+    <strong>Recherches surveillées</strong>
+    <p><small>Collez ici l'URL d'une recherche <strong>déjà filtrée et sauvegardée</strong>
+      sur Leboncoin, PAP ou SeLoger. L'extension l'ouvrira en arrière-plan à intervalle
+      régulier pour détecter les nouvelles annonces.</small></p>
+    <div class="row">
+      <input type="url" id="new-url" placeholder="https://www.leboncoin.fr/recherche?..." />
+      <button id="add-url" class="primary">Ajouter</button>
+    </div>
+    <ul id="url-list"></ul>
+  </div>
+
+  <div class="card">
+    <strong>Fréquence de vérification</strong>
+    <div class="row">
+      <select id="interval">
+        <option value="5">5 minutes</option>
+        <option value="15" selected>15 minutes</option>
+        <option value="30">30 minutes (identique au serveur)</option>
+        <option value="60">60 minutes</option>
+      </select>
+      <button id="save-interval">Enregistrer</button>
+      <button id="check-now">Vérifier maintenant</button>
+    </div>
+    <small>Comme ceci passe par votre navigateur (vos cookies), c'est bien plus discret
+      qu'un serveur — un intervalle court reste raisonnable.</small>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

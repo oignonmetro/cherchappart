@@ -529,6 +529,24 @@
       } catch (e) { flash("Erreur : " + e.message, "#account-msg3"); }
     });
 
+    // Détection de l'extension (annoncée par bridge.js) + handshake de session.
+    window.addEventListener("message", (event) => {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      const msg = event.data;
+      if (msg?.source !== "chercheappart-extension") return;
+      if (msg.type === "chercheappart:present") {
+        $("#ext-status").textContent = "Extension détectée ✓";
+        $("#ext-connect").disabled = false;
+      }
+      if (msg.type === "chercheappart:connected") {
+        $("#ext-status").textContent = "Extension connectée ✓";
+      }
+    });
+    $("#ext-connect").addEventListener("click", async () => {
+      try { await C.exportSessionToExtension(); }
+      catch (e) { $("#ext-status").textContent = "Erreur : " + e.message; }
+    });
+
     C.init().then(render);
   }
 

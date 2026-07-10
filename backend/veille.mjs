@@ -136,7 +136,14 @@ async function searchBienici(c) {
   return [...byId.values()];
 }
 
-/* ---------------- Notifications ---------------- */
+/* ---------------- Notifications ----------------
+ * Point unique de dispatch : Bien'ici, l'ingestion e-mail ET l'extension
+ * navigateur insèrent simplement des lignes dans `listings` (notified=false
+ * par défaut). Ce module regroupe par utilisateur tout ce qui n'a pas encore
+ * été notifié, envoie UNE notification groupée, puis marque ces lignes.
+ * Ainsi l'extension (qui écrit directement dans Supabase, sans jamais voir
+ * la clé VAPID) profite du même mécanisme de notification, au prochain
+ * passage du worker (≤ 30 min). */
 async function notify(userId, newItems) {
   if (!pushEnabled || !newItems.length) return;
   const { data: subs } = await supabase
@@ -199,24 +206,51 @@ async function run() {
       .select("data");
 
     if (insErr) { console.warn(`Insert ${s.id}: ${insErr.message}`); continue; }
-    const newItems = (inserted || []).map((x) => x.data);
-    if (newItems.length) {
-      totalNew += newItems.length;
-      console.log(`  recherche ${s.label || s.id}: +${newItems.length} nouvelle(s)`);
-      await notify(s.user_id, newItems);
+    const newCount = (inserted || []).length;
+    if (newCount) {
+      totalNew += newCount;
+      console.log(`  recherche ${s.label || s.id}: +${newCount} nouvelle(s)`);
     }
   }
   console.log(`Bien'ici : ${totalNew} nouvelle(s) annonce(s).`);
 
-  // Ingestion des alertes e-mail Leboncoin / PAP / SeLoger (même push unifié).
+  // Ingestion des alertes e-mail Leboncoin / PAP / SeLoger.
   try {
-    const res = await ingestEmails(supabase, notify);
+    const res = await ingestEmails(supabase);
     if (res && res.new) totalNew += res.new;
   } catch (e) {
     console.warn("Ingestion e-mail échouée :", e.message);
   }
 
+  // Dispatch unifié : Bien'ici + e-mail + extension navigateur (celle-ci a pu
+  // insérer des annonces directement dans Supabase depuis le dernier passage).
+  const notifiedCount = await dispatchPendingNotifications();
+  console.log(`Notifications envoyées pour ${notifiedCount} annonce(s).`);
+
   console.log(`Terminé. ${totalNew} nouvelle(s) annonce(s) au total.`);
+}
+
+async function dispatchPendingNotifications() {
+  const { data: pending, error } = await supabase
+    .from("listings").select("id, user_id, data").eq("notified", false);
+  if (error) { console.warn("Lecture des annonces à notifier :", error.message); return 0; }
+  if (!pending || !pending.length) return 0;
+
+  const byUser = new Map();
+  for (const row of pending) {
+    if (!byUser.has(row.user_id)) byUser.set(row.user_id, []);
+    byUser.get(row.user_id).push(row);
+  }
+
+  let count = 0;
+  for (const [userId, rows] of byUser) {
+    await notify(userId, rows.map((r) => r.data));
+    const ids = rows.map((r) => r.id);
+    const { error: updErr } = await supabase.from("listings").update({ notified: true }).in("id", ids);
+    if (updErr) console.warn(`Marquage notified (user ${userId}) :`, updErr.message);
+    else count += ids.length;
+  }
+  return count;
 }
 
 run().catch((e) => { console.error(e); process.exit(1); });
