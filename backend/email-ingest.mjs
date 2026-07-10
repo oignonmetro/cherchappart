@@ -2,32 +2,16 @@
  * ChercheAppart — ingestion des alertes e-mail (Leboncoin / PAP / SeLoger).
  *
  * Solution 100 % gratuite et conforme pour les sites protégés par anti-bot :
- * on n'essaie PAS de les scraper. On lit, par IMAP, les e-mails d'alerte que
- * ces sites envoient eux-mêmes (recherche sauvegardée), on en extrait les
- * annonces, on les stocke dans Supabase et on notifie via le push unifié.
+ * on ne les scrape pas. On lit, par IMAP, les e-mails d'alerte que ces sites
+ * envoient eux-mêmes (recherche sauvegardée), on en extrait les annonces, on
+ * les stocke dans Supabase et on notifie via le push unifié.
  *
- * Boîte dédiée recommandée (ex. Gmail) que l'utilisateur ne lit pas.
- *
- * Variables d'environnement (secrets) :
- *   IMAP_HOST (défaut imap.gmail.com), IMAP_PORT (993), IMAP_USER, IMAP_PASSWORD
- *   ALERT_OWNER_EMAIL : l'e-mail du compte ChercheAppart qui reçoit ces alertes
- *
- * Les parseurs par site sont volontairement tolérants (extraction par motif
- * d'URL) : ils survivent aux changements de gabarit. À affiner avec un
- * e-mail d'exemple réel de chaque site.
+ * PAR UTILISATEUR : chaque utilisateur renseigne SA propre boîte d'alertes
+ * (table `email_sources`) depuis l'interface. Le worker (clé service) lit la
+ * boîte de chacun et rattache les annonces au bon utilisateur.
  */
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
-
-const {
-  IMAP_HOST = "imap.gmail.com",
-  IMAP_PORT = "993",
-  IMAP_USER,
-  IMAP_PASSWORD,
-  ALERT_OWNER_EMAIL,
-} = process.env;
-
-const configured = Boolean(IMAP_USER && IMAP_PASSWORD && ALERT_OWNER_EMAIL);
 
 // Détection du site par expéditeur.
 const SITE_SENDERS = [
@@ -42,6 +26,12 @@ const SITE_PATTERNS = {
   leboncoin: /leboncoin\.fr(?:[^\s"'<>]*?)\/(?:ad\/[a-z_]+\/)?(\d{9,11})/gi,
   seloger: /seloger\.com(?:[^\s"'<>]*?)\/(\d{8,10})/gi,
   pap: /pap\.fr(?:[^\s"'<>]*?)(?:-r|\/)(\d{6,10})/gi,
+};
+
+const SITE_HOME = {
+  leboncoin: "https://www.leboncoin.fr/",
+  seloger: "https://www.seloger.com/",
+  pap: "https://www.pap.fr/",
 };
 
 function safeDecode(s) {
@@ -59,91 +49,57 @@ function extractListings(site, html, subject) {
   while ((m = re.exec(decoded)) !== null) {
     const id = m[1];
     if (seen.has(id)) continue;
-    // URL réelle : le fragment matché (nettoyé) — le lien de tracking reste cliquable.
     const around = decoded.slice(m.index, m.index + 300);
     const urlMatch = around.match(/https?:\/\/[^\s"'<>]+/);
-    const url = urlMatch ? urlMatch[0].replace(/&amp;/g, "&") : `https://www.${site === "leboncoin" ? "leboncoin.fr" : site === "seloger" ? "seloger.com" : "pap.fr"}/`;
-    // prix éventuel à proximité
+    const url = urlMatch ? urlMatch[0].replace(/&amp;/g, "&") : SITE_HOME[site];
     const priceM = around.match(/(\d[\d\s.]{2,})\s*€/);
     seen.set(id, {
       external_id: `${site}-${id}`,
       title: `Annonce ${site} — ${(subject || "").slice(0, 60)}`.trim(),
       url,
-      price: priceM ? priceM[1].replace(/\s/g, " ").trim() + " €" : "",
-      surface: null,
-      rooms: null,
-      location: "",
-      image: "",
-      source: site,
+      price: priceM ? priceM[1].replace(/\s+/g, " ").trim() + " €" : "",
+      surface: null, rooms: null, location: "", image: "", source: site,
     });
   }
   return [...seen.values()];
 }
 
-async function resolveOwnerId(supabase) {
-  // Retrouve l'utilisateur propriétaire des alertes par son e-mail.
-  let page = 1;
-  for (; page <= 20; page++) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) throw new Error("listUsers: " + error.message);
-    const u = data.users.find((x) => (x.email || "").toLowerCase() === ALERT_OWNER_EMAIL.toLowerCase());
-    if (u) return u.id;
-    if (data.users.length < 200) break;
-  }
-  return null;
-}
-
-async function ensureEmailSearch(supabase, ownerId) {
+async function ensureEmailSearch(supabase, userId) {
   const LABEL = "📧 Alertes e-mail (Leboncoin/PAP/SeLoger)";
   const { data: existing } = await supabase
-    .from("searches").select("id").eq("user_id", ownerId).eq("label", LABEL).maybeSingle();
+    .from("searches").select("id").eq("user_id", userId).eq("label", LABEL).maybeSingle();
   if (existing?.id) return existing.id;
   const { data, error } = await supabase
-    .from("searches").insert({ user_id: ownerId, label: LABEL, criteria: { kind: "email" }, active: true })
+    .from("searches").insert({ user_id: userId, label: LABEL, criteria: { kind: "email" }, active: true })
     .select("id").single();
   if (error) throw new Error("ensureEmailSearch: " + error.message);
   return data.id;
 }
 
-/**
- * @param supabase client service-role
- * @param notify   fonction (userId, newItems[]) => Promise pour le push unifié
- */
-export async function ingestEmails(supabase, notify) {
-  if (!configured) {
-    console.log("Ingestion e-mail non configurée (IMAP_* / ALERT_OWNER_EMAIL absents) — ignorée.");
-    return { skipped: true };
-  }
-
-  const ownerId = await resolveOwnerId(supabase);
-  if (!ownerId) {
-    console.warn(`Aucun utilisateur ChercheAppart avec l'e-mail ${ALERT_OWNER_EMAIL} — connectez-vous une fois sur le site.`);
-    return { skipped: true };
-  }
-  const searchId = await ensureEmailSearch(supabase, ownerId);
-
+// Lit une boîte IMAP et renvoie les annonces extraites des e-mails d'alerte non lus.
+async function readMailbox(src) {
   const client = new ImapFlow({
-    host: IMAP_HOST, port: Number(IMAP_PORT), secure: true,
-    auth: { user: IMAP_USER, pass: IMAP_PASSWORD }, logger: false,
+    host: src.imap_host || "imap.gmail.com",
+    port: Number(src.imap_port || 993),
+    secure: true,
+    auth: { user: src.imap_user, pass: src.imap_password },
+    logger: false,
   });
-  await client.connect();
-  let totalNew = 0;
   const collected = [];
+  await client.connect();
   try {
     const lock = await client.getMailboxLock("INBOX");
     try {
-      // e-mails non lus uniquement
       const uids = await client.search({ seen: false }, { uid: true });
-      for (const uid of uids.slice(-100)) {
+      for (const uid of (uids || []).slice(-100)) {
         const msg = await client.fetchOne(uid, { source: true }, { uid: true });
         if (!msg) continue;
         const parsed = await simpleParser(msg.source);
         const from = (parsed.from?.text || "").toLowerCase();
         const site = SITE_SENDERS.find((s) => s.re.test(from))?.site;
-        if (!site) { continue; } // on ne touche pas aux autres e-mails
+        if (!site) continue; // on ignore (et ne marque pas lu) les autres e-mails
         const html = parsed.html || parsed.textAsHtml || parsed.text || "";
-        const items = extractListings(site, html, parsed.subject || "");
-        collected.push(...items);
+        collected.push(...extractListings(site, html, parsed.subject || ""));
         await client.messageFlagsAdd(uid, ["\\Seen"], { uid: true });
       }
     } finally {
@@ -152,24 +108,49 @@ export async function ingestEmails(supabase, notify) {
   } finally {
     await client.logout();
   }
+  return collected;
+}
 
-  if (!collected.length) {
-    console.log("Ingestion e-mail : aucune annonce détectée dans les e-mails non lus.");
+/**
+ * @param supabase client service-role
+ * @param notify   fonction (userId, newItems[]) => Promise pour le push unifié
+ */
+export async function ingestEmails(supabase, notify) {
+  const { data: sources, error } = await supabase
+    .from("email_sources").select("*").eq("active", true);
+  if (error) { console.warn("email_sources:", error.message); return { new: 0 }; }
+  if (!sources || !sources.length) {
+    console.log("Aucune boîte d'alertes configurée — ingestion e-mail ignorée.");
     return { new: 0 };
   }
 
-  // dédup global puis insertion (ignore les doublons déjà connus)
-  const rows = [...new Map(collected.map((l) => [l.external_id, l])).values()]
-    .map((l) => ({ search_id: searchId, user_id: ownerId, external_id: l.external_id, data: l }));
+  let totalNew = 0;
+  for (const src of sources) {
+    let collected;
+    try {
+      collected = await readMailbox(src);
+    } catch (e) {
+      console.warn(`IMAP ${src.imap_user}: ${e.message}`);
+      continue;
+    }
+    if (!collected.length) continue;
 
-  const { data: inserted, error } = await supabase
-    .from("listings").upsert(rows, { onConflict: "search_id,external_id", ignoreDuplicates: true })
-    .select("data");
-  if (error) { console.warn("Insert e-mail:", error.message); return { new: 0 }; }
+    const searchId = await ensureEmailSearch(supabase, src.user_id);
+    const rows = [...new Map(collected.map((l) => [l.external_id, l])).values()]
+      .map((l) => ({ search_id: searchId, user_id: src.user_id, external_id: l.external_id, data: l }));
 
-  const newItems = (inserted || []).map((x) => x.data);
-  totalNew = newItems.length;
-  console.log(`Ingestion e-mail : ${collected.length} annonce(s) lues, ${totalNew} nouvelle(s).`);
-  if (totalNew && notify) await notify(ownerId, newItems);
+    const { data: inserted, error: insErr } = await supabase
+      .from("listings").upsert(rows, { onConflict: "search_id,external_id", ignoreDuplicates: true })
+      .select("data");
+    if (insErr) { console.warn(`Insert e-mail ${src.imap_user}: ${insErr.message}`); continue; }
+
+    const newItems = (inserted || []).map((x) => x.data);
+    if (newItems.length) {
+      totalNew += newItems.length;
+      console.log(`  boîte ${src.imap_user}: +${newItems.length} nouvelle(s)`);
+      if (notify) await notify(src.user_id, newItems);
+    }
+  }
+  console.log(`Ingestion e-mail : ${totalNew} nouvelle(s) annonce(s).`);
   return { new: totalNew };
 }

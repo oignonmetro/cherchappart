@@ -32,6 +32,27 @@ create table if not exists public.listings (
 );
 create index if not exists listings_user_idx on public.listings (user_id, found_at desc);
 
+-- ---------- Boîtes e-mail d'alertes (Leboncoin/PAP/SeLoger), PAR UTILISATEUR ----------
+-- Chaque utilisateur renseigne SA PROPRE boîte dédiée depuis l'interface (jamais
+-- une adresse figée côté serveur). Le worker (clé service) lit chaque boîte
+-- active et rattache les annonces trouvées au bon utilisateur.
+--
+-- Sécurité : n'y stockez qu'un "mot de passe d'application" (révocable à tout
+-- moment côté Gmail/Outlook), jamais le mot de passe principal du compte.
+-- RLS restreint la lecture au propriétaire + à la clé service du worker.
+create table if not exists public.email_sources (
+  id            bigint generated always as identity primary key,
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  imap_host     text not null default 'imap.gmail.com',
+  imap_port     int  not null default 993,
+  imap_user     text not null,             -- adresse de la boîte dédiée
+  imap_password text not null,             -- mot de passe d'application (pas le mdp principal)
+  active        boolean not null default true,
+  created_at    timestamptz not null default now(),
+  unique (user_id, imap_user)
+);
+create index if not exists email_sources_user_idx on public.email_sources (user_id);
+
 -- ---------- Abonnements Web Push (pour les alertes app fermée) ----------
 create table if not exists public.push_subscriptions (
   id         bigint generated always as identity primary key,
@@ -46,6 +67,7 @@ create index if not exists push_user_idx on public.push_subscriptions (user_id);
 alter table public.searches            enable row level security;
 alter table public.listings            enable row level security;
 alter table public.push_subscriptions  enable row level security;
+alter table public.email_sources       enable row level security;
 
 -- Chaque utilisateur gère uniquement ses propres lignes.
 create policy "own searches"  on public.searches
@@ -55,6 +77,9 @@ create policy "own listings"  on public.listings
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "own push subs" on public.push_subscriptions
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own email sources" on public.email_sources
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Note : la clé "service role" (utilisée par le worker GitHub Actions) contourne

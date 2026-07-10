@@ -46,6 +46,35 @@
             <button type="button" id="account-signout" class="btn ghost">Déconnexion</button>
           </div>
           <span id="account-msg2" class="save-status"></span>
+
+          <hr class="span-2" />
+
+          <strong>📧 Alertes Leboncoin / PAP / SeLoger</strong>
+          <small>
+            Ces sites bloquent la récupération automatique. Solution gratuite et conforme :
+            créez une <strong>boîte e-mail dédiée</strong> (que vous ne lisez pas), activez-y les
+            <strong>alertes e-mail natives</strong> de ces sites (recherche sauvegardée), puis
+            renseignez ici ses identifiants — <em>utilisez un « mot de passe d'application »,
+            jamais votre mot de passe principal</em>. La veille lira cette boîte à votre place et
+            vous notifiera comme pour Bien'ici.
+            <a href="https://github.com/oignonmetro/cherchappart/blob/main/SETUP.md#6-option-alertes-leboncoin--pap--seloger--sans-scraping" target="_blank" rel="noopener">Marche à suivre détaillée ↗</a>
+          </small>
+
+          <div id="email-source-none">
+            <div class="account-row">
+              <input type="email" id="es-user" placeholder="boite-alertes@gmail.com" autocomplete="off" />
+              <input type="password" id="es-password" placeholder="Mot de passe d'application" autocomplete="off" />
+            </div>
+            <div class="account-row">
+              <input type="text" id="es-host" placeholder="imap.gmail.com (défaut)" autocomplete="off" />
+              <button type="button" id="es-save" class="btn primary">Enregistrer la boîte</button>
+            </div>
+          </div>
+          <div id="email-source-set" hidden>
+            <span>Boîte active : <strong id="es-current"></strong></span>
+            <button type="button" id="es-remove" class="btn ghost small">Supprimer</button>
+          </div>
+          <span id="account-msg3" class="save-status"></span>
         </div>
       </div>
 

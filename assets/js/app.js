@@ -473,6 +473,12 @@
       if (user) $("#account-user").textContent = user.email || "";
     };
 
+    const renderEmailSource = (src) => {
+      $("#email-source-none").hidden = !!src;
+      $("#email-source-set").hidden = !src;
+      if (src) $("#es-current").textContent = `${src.imap_user} (${src.imap_host})`;
+    };
+
     C.onAuthChange(async (user) => {
       render(user);
       if (!user) return;
@@ -485,6 +491,7 @@
         try { await C.saveCriteria(criteria); } catch { /* ignore */ }
       }
       C.pushStatus().then((on) => { if (on) $("#account-alerts").textContent = "🔔 Alertes activées ✓"; });
+      C.loadEmailSource().then(renderEmailSource).catch(() => {});
     });
 
     $("#account-signin").addEventListener("click", async () => {
@@ -500,6 +507,26 @@
         $("#account-alerts").textContent = "🔔 Alertes activées ✓";
         flash("Alertes activées ✓", "#account-msg2");
       } catch (e) { flash("Erreur : " + e.message, "#account-msg2"); }
+    });
+
+    $("#es-save").addEventListener("click", async () => {
+      const imapUser = $("#es-user").value.trim();
+      const imapPassword = $("#es-password").value.trim();
+      const imapHost = $("#es-host").value.trim();
+      try {
+        await C.saveEmailSource({ imapUser, imapPassword, imapHost });
+        $("#es-password").value = ""; // ne pas garder le mot de passe affiché
+        renderEmailSource(await C.loadEmailSource());
+        flash("Boîte enregistrée ✓ (lue au prochain passage de la veille)", "#account-msg3");
+      } catch (e) { flash("Erreur : " + e.message, "#account-msg3"); }
+    });
+    $("#es-remove").addEventListener("click", async () => {
+      try {
+        const src = await C.loadEmailSource();
+        if (src) await C.removeEmailSource(src.id);
+        renderEmailSource(null);
+        flash("Boîte supprimée.", "#account-msg3");
+      } catch (e) { flash("Erreur : " + e.message, "#account-msg3"); }
     });
 
     C.init().then(render);

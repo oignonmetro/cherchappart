@@ -54,9 +54,8 @@ jobs:
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
-          # Ingestion des alertes e-mail (Leboncoin/PAP/SeLoger) — optionnel
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
-          ALERT_OWNER_EMAIL: ${{ secrets.ALERT_OWNER_EMAIL }}
         run: node veille.mjs
+        # Les boîtes e-mail d'alertes (Leboncoin/PAP/SeLoger) ne sont PAS des
+        # secrets globaux : chaque utilisateur renseigne la sienne depuis
+        # l'interface (table email_sources, protégée par RLS). Le worker les
+        # lit toutes avec la clé service ci-dessus.

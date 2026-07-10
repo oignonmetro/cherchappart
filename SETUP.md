@@ -66,26 +66,26 @@ Dépôt ▸ **Settings ▸ Secrets and variables ▸ Actions ▸ New repository 
 Ces sites bloquent le scraping (DataDome). La solution gratuite et conforme :
 **lire leurs propres e-mails d'alerte** et les convertir en push unifié.
 
-1. **Crée une adresse Gmail dédiée** (ex. `mes-alertes-immo@gmail.com`) que tu ne
-   liras pas — elle sert de tuyau.
-2. Active un **mot de passe d'application** : compte Google ▸ Sécurité ▸
+Contrairement au reste de la configuration, **cette étape ne se fait PAS dans
+des secrets GitHub** : chaque utilisateur renseigne **sa propre boîte** depuis
+le site (table `email_sources`, protégée par RLS — personne d'autre que vous
+et le worker n'y a accès). Rien à toucher côté dépôt.
+
+1. **Créez une adresse e-mail dédiée** (ex. Gmail `mes-alertes-immo@gmail.com`)
+   que vous ne lirez pas — elle sert de tuyau.
+2. Activez un **mot de passe d'application** : compte Google ▸ Sécurité ▸
    validation en 2 étapes (obligatoire) ▸ **Mots de passe des applications** →
-   crée-en un (16 caractères). C'est lui qui sert de `IMAP_PASSWORD` (pas ton mot
-   de passe Gmail).
-3. Sur **Leboncoin, PAP, SeLoger** : fais ta recherche avec tes critères →
-   **enregistre-la / crée une alerte e-mail** en indiquant l'adresse dédiée.
-4. Ajoute ces **secrets GitHub** :
+   créez-en un (16 caractères). **N'utilisez jamais votre mot de passe principal.**
+3. Sur **Leboncoin, PAP, SeLoger** : faites votre recherche avec vos critères →
+   **enregistrez-la / créez une alerte e-mail** vers cette adresse dédiée.
+4. Sur le site ChercheAppart, connecté, dans la carte **📧 Alertes Leboncoin /
+   PAP / SeLoger** : renseignez l'adresse et le mot de passe d'application →
+   **Enregistrer la boîte**.
 
-   | Secret | Valeur |
-   |---|---|
-   | `IMAP_USER` | `mes-alertes-immo@gmail.com` |
-   | `IMAP_PASSWORD` | le mot de passe d'application (16 car.) |
-   | `ALERT_OWNER_EMAIL` | l'e-mail de **ton compte ChercheAppart** (celui de connexion au site) |
-   | `IMAP_HOST` | `imap.gmail.com` (optionnel, valeur par défaut) |
-
-À chaque passage (30 min), le worker lit les e-mails d'alerte non lus, en extrait
-les annonces, les dédoublonne et t'envoie le **même push** que Bien'ici. Tes
-e-mails d'alerte sont marqués « lus » ; tu n'as jamais à ouvrir cette boîte.
+À chaque passage (30 min), le worker lit — pour **chaque utilisateur** qui a
+configuré une boîte — les e-mails d'alerte non lus, en extrait les annonces,
+les dédoublonne et envoie le **même push** que Bien'ici. Les e-mails lus sont
+marqués comme tels ; vous n'avez jamais besoin d'ouvrir cette boîte vous-même.
 
 ## Notes
 

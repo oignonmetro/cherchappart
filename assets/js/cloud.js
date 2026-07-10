@@ -112,4 +112,36 @@
     const sub = reg && (await reg.pushManager.getSubscription());
     return Boolean(sub);
   };
+
+  /* ---- Boîte(s) e-mail d'alertes (Leboncoin/PAP/SeLoger), propres à l'utilisateur ---- */
+  Cloud.loadEmailSource = async () => {
+    if (!Cloud.user) return null;
+    const { data, error } = await sb
+      .from("email_sources").select("id, imap_host, imap_port, imap_user, active")
+      .eq("user_id", Cloud.user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (error) { console.warn("loadEmailSource", error.message); return null; }
+    return data || null; // ne renvoie jamais le mot de passe au client
+  };
+
+  Cloud.saveEmailSource = async ({ imapHost, imapPort, imapUser, imapPassword }) => {
+    if (!Cloud.user) throw new Error("Connectez-vous d'abord.");
+    if (!imapUser || !imapPassword) throw new Error("Adresse et mot de passe d'application requis.");
+    const row = {
+      user_id: Cloud.user.id,
+      imap_host: imapHost || "imap.gmail.com",
+      imap_port: imapPort || 993,
+      imap_user: imapUser,
+      imap_password: imapPassword,
+      active: true,
+    };
+    const { error } = await sb.from("email_sources")
+      .upsert(row, { onConflict: "user_id,imap_user" });
+    if (error) throw error;
+  };
+
+  Cloud.removeEmailSource = async (id) => {
+    if (!Cloud.user) return;
+    const { error } = await sb.from("email_sources").delete().eq("id", id).eq("user_id", Cloud.user.id);
+    if (error) throw error;
+  };
 })();
