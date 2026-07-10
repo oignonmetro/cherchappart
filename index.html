@@ -26,7 +26,28 @@
     <!-- ============ CRITÈRES ============ -->
     <section id="panel-criteres" class="panel is-active" role="tabpanel">
       <h1>Vos critères de recherche</h1>
-      <p class="lead">Ces critères restent dans <strong>votre navigateur</strong> et pilotent la recherche en direct de l'onglet <strong>Annonces</strong>. Rien n'est partagé avec les autres utilisateurs. (L'export <code>criteria.json</code> ne sert qu'à la veille CLI optionnelle.)</p>
+      <p class="lead">Ces critères restent dans <strong>votre navigateur</strong> et pilotent la recherche en direct de l'onglet <strong>Annonces</strong>. Rien n'est partagé avec les autres utilisateurs.</p>
+
+      <!-- Compte : veille serveur + alertes (affiché seulement si Supabase est configuré) -->
+      <div id="account-card" class="card account" hidden>
+        <div id="account-out">
+          <strong>🔔 Veille en arrière-plan + alertes</strong>
+          <small>Connectez-vous pour que la veille tourne côté serveur (même app fermée) et recevoir une notification à chaque nouvelle annonce.</small>
+          <div class="account-row">
+            <input type="email" id="account-email" placeholder="votre@email.fr" autocomplete="email" />
+            <button type="button" id="account-signin" class="btn primary">Recevoir le lien</button>
+          </div>
+          <span id="account-msg" class="save-status"></span>
+        </div>
+        <div id="account-in" hidden>
+          <strong>Connecté : <span id="account-user"></span></strong>
+          <div class="account-row">
+            <button type="button" id="account-alerts" class="btn primary">🔔 Activer les alertes</button>
+            <button type="button" id="account-signout" class="btn ghost">Déconnexion</button>
+          </div>
+          <span id="account-msg2" class="save-status"></span>
+        </div>
+      </div>
 
       <form id="criteria-form" class="card grid">
         <div class="field span-2">
@@ -197,6 +218,9 @@
     ChercheAppart · veille d'annonces open-source · vos données restent dans votre navigateur.
   </footer>
 
+  <script src="assets/js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/cloud.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

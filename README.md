@@ -17,7 +17,13 @@ les messages de contact. Aucun réglage n'est imposé, aucune donnée n'est part
 | **Re-vérification automatique** | ✅ | Tant que l'onglet Annonces est ouvert, une recherche est relancée toutes les 3 min ; les nouveautés sont marquées « nouveau » |
 | **Générateur d'URL filtrées** | ✅ Très fiable | Vos critères → URL de recherche réelles (Bien'ici, Leboncoin) |
 | **Contact semi-automatique** | ✅ | Message pré-rédigé + ouverture en un clic (mailto / annonce) |
+| **Veille serveur + alertes push** | ✅ Option gratuite | Backend Supabase + cron GitHub Actions : la veille tourne **en arrière-plan, par utilisateur, app fermée**, et notifie chaque nouvelle annonce. Voir [`SETUP.md`](SETUP.md) |
 | **Leboncoin / PAP / SeLoger** | ⚠️ Manuel | Protégés par anti-bots (DataDome) → non récupérables automatiquement, mais URL filtrées générées pour ouverture manuelle |
+
+## Deux modes
+
+- **Sans configuration** (par défaut) : recherche Bien'ici **en direct dans le navigateur** avec vos critères, actualisée tant que l'onglet est ouvert. Rien à installer.
+- **Avec backend gratuit** (optionnel) : comptes utilisateurs (Supabase), veille **en arrière-plan** toutes les 30 min (GitHub Actions) et **notifications push** même app fermée. Tout est gratuit et sans carte bancaire → [`SETUP.md`](SETUP.md).
 
 ## Pourquoi cette architecture ?
 

@@ -133,3 +133,9 @@ textarea{resize:vertical}
 /* badge "veille auto" sur le choix de site */
 .tag-auto{background:var(--accent-2);color:#052e16;font-size:.66rem;font-weight:800;
   padding:1px 6px;border-radius:999px;margin-left:2px;vertical-align:middle}
+
+/* Carte compte (veille serveur + alertes) */
+.account{margin-bottom:18px;display:flex;flex-direction:column;gap:8px}
+.account small{color:var(--muted);font-size:.82rem;display:block;margin:2px 0 6px}
+.account-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.account-row input{flex:1;min-width:180px}

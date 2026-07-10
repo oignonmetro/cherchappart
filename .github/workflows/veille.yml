@@ -1,0 +1,40 @@
+name: Veille des annonces (serveur)
+
+# Le "serveur" gratuit de ChercheAppart : toutes les 30 min, interroge Bien'ici
+# pour chaque recherche de chaque utilisateur (Supabase) et notifie les nouveautés.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # toutes les 30 minutes
+  workflow_dispatch:
+
+concurrency:
+  group: veille
+  cancel-in-progress: false
+
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    # Ne s'exécute que si les secrets Supabase sont configurés.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Installer les dépendances
+        working-directory: backend
+        run: npm ci || npm install
+
+      - name: Lancer la veille
+        working-directory: backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: node veille.mjs

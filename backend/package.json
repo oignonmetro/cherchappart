@@ -1,0 +1,14 @@
+{
+  "name": "chercheappart-veille",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Worker de veille ChercheAppart (GitHub Actions + Supabase + Web Push)",
+  "scripts": {
+    "veille": "node veille.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "web-push": "^3.6.7"
+  }
+}

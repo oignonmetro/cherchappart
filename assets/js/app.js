@@ -128,7 +128,13 @@
   $("#save-btn").addEventListener("click", () => {
     readForm(); persist();
     const s = $("#save-status"); s.textContent = "✓ Enregistré";
-    setTimeout(() => (s.textContent = ""), 2000);
+    // Si connecté, on pousse aussi les critères côté serveur (pour la veille en arrière-plan).
+    if (window.Cloud && window.Cloud.user) {
+      window.Cloud.saveCriteria(criteria)
+        .then(() => { s.textContent = "✓ Enregistré (veille serveur à jour)"; })
+        .catch((e) => { s.textContent = "Enregistré localement (serveur: " + e.message + ")"; });
+    }
+    setTimeout(() => (s.textContent = ""), 3000);
   });
   $("#export-btn").addEventListener("click", () => {
     readForm(); persist();
@@ -451,6 +457,55 @@
     } catch {}
   });
 
+  /* ---------- Compte (Supabase, optionnel) ---------- */
+  function setupAccount() {
+    const C = window.Cloud;
+    if (!C || !C.enabled) return; // config absente -> mode local, carte masquée
+    $("#account-card").hidden = false;
+
+    const flash = (t, sel = "#account-msg") => {
+      const e = $(sel); if (!e) return;
+      e.textContent = t; setTimeout(() => (e.textContent = ""), 4000);
+    };
+    const render = (user) => {
+      $("#account-out").hidden = !!user;
+      $("#account-in").hidden = !user;
+      if (user) $("#account-user").textContent = user.email || "";
+    };
+
+    C.onAuthChange(async (user) => {
+      render(user);
+      if (!user) return;
+      const cloudCrit = await C.loadCriteria();
+      if (cloudCrit) {                       // on adopte les critères déjà enregistrés
+        criteria = { ...DEFAULT_CRITERIA, ...cloudCrit };
+        villes = [...(criteria.villes || [])];
+        persist(); fillForm();
+      } else {                               // 1re connexion : on pousse les critères locaux
+        try { await C.saveCriteria(criteria); } catch { /* ignore */ }
+      }
+      C.pushStatus().then((on) => { if (on) $("#account-alerts").textContent = "🔔 Alertes activées ✓"; });
+    });
+
+    $("#account-signin").addEventListener("click", async () => {
+      const email = $("#account-email").value.trim();
+      if (!email) return flash("Entrez votre e-mail.");
+      try { await C.signIn(email); flash("Lien de connexion envoyé ! Vérifiez vos e-mails."); }
+      catch (e) { flash("Erreur : " + e.message); }
+    });
+    $("#account-signout").addEventListener("click", () => C.signOut());
+    $("#account-alerts").addEventListener("click", async () => {
+      try {
+        await C.enablePush();
+        $("#account-alerts").textContent = "🔔 Alertes activées ✓";
+        flash("Alertes activées ✓", "#account-msg2");
+      } catch (e) { flash("Erreur : " + e.message, "#account-msg2"); }
+    });
+
+    C.init().then(render);
+  }
+
   /* ---------- Init ---------- */
   fillForm();
+  setupAccount();
 })();
