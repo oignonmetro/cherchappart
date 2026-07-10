@@ -104,18 +104,28 @@ essai réel de votre part permettra d'ajuster si besoin — voir « Vérifier »
 
 ### Installation (extension non publiée : mode développeur)
 
-1. Ouvrez `chrome://extensions` (ou `edge://extensions`) → activez **Mode développeur**
+Pas besoin de cloner tout le dépôt : un **ZIP prêt à l'emploi** de l'extension
+seule est généré automatiquement à chaque mise à jour.
+
+1. **[⬇️ Télécharger l'extension (.zip)](https://github.com/oignonmetro/cherchappart/releases/download/extension-latest/chercheappart-extension.zip)**
+   puis dézippez-le (le lien est aussi disponible directement dans la carte
+   Compte du site).
+2. Ouvrez `chrome://extensions` (ou `edge://extensions`) → activez **Mode développeur**
    (interrupteur en haut à droite).
-2. **Charger l'extension non empaquetée** → sélectionnez le dossier
-   [`extension/`](extension) de ce dépôt (téléchargez-le ou clonez le dépôt localement).
-3. Ouvrez le site ChercheAppart, connectez-vous, puis dans la carte Compte :
+3. **Charger l'extension non empaquetée** → sélectionnez le **dossier dézippé**.
+4. Ouvrez le site ChercheAppart, connectez-vous, puis dans la carte Compte :
    **🧩 Connecter l'extension** (le statut passe à « Extension détectée » puis
    « Extension connectée »).
-4. Clic droit sur l'icône de l'extension → **Options** (ou `chrome://extensions` →
+5. Clic droit sur l'icône de l'extension → **Options** (ou `chrome://extensions` →
    Détails → Options) :
    - Sur Leboncoin/PAP/SeLoger, faites votre recherche filtrée, **sauvegardez-la**,
      copiez son URL, collez-la dans « Recherches surveillées ».
    - Réglez la fréquence (15 min par défaut).
+
+> **Aller plus loin (payant) :** la seule vraie installation « 1 clic » serait une
+> publication sur le Chrome Web Store — compte développeur Google à 5 $ (paiement
+> unique) + quelques jours de validation à chaque mise à jour. Non fait ici pour
+> rester 100 % gratuit ; possible plus tard si vous le souhaitez.
 
 ### Vérifier que ça fonctionne
 

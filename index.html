@@ -83,9 +83,26 @@
             En complément de l'e-mail : une extension tournant dans <strong>votre propre
             navigateur</strong> (vos cookies) surveille vos recherches sauvegardées
             Leboncoin/PAP/SeLoger toutes les 15 min (réglable), sans passer par un serveur —
-            donc sans blocage anti-bot.
-            <a href="https://github.com/oignonmetro/cherchappart/blob/main/SETUP.md#7-option-extension-navigateur--d%C3%A9tection-quasi-instantan%C3%A9e" target="_blank" rel="noopener">Installation ↗</a>
+            donc sans blocage anti-bot. Non publiée sur le Chrome Web Store (mode développeur,
+            3 étapes) :
           </small>
+          <ol class="ext-steps">
+            <li>
+              <a class="btn primary small" href="https://github.com/oignonmetro/cherchappart/releases/download/extension-latest/chercheappart-extension.zip">⬇️ Télécharger l'extension (.zip)</a>
+              puis dézippez-le.
+            </li>
+            <li>
+              Ouvrez
+              <code id="ext-chrome-url">chrome://extensions</code>
+              <button type="button" id="ext-copy-url" class="btn ghost small" title="Copier">📋</button>
+              et activez <strong>Mode développeur</strong> (en haut à droite).
+            </li>
+            <li>
+              <strong>Charger l'extension non empaquetée</strong> → sélectionnez le dossier
+              dézippé.
+            </li>
+          </ol>
+          <small><a href="https://github.com/oignonmetro/cherchappart/blob/main/SETUP.md#7-option-extension-navigateur--d%C3%A9tection-quasi-instantan%C3%A9e" target="_blank" rel="noopener">Instructions détaillées / dépannage ↗</a></small>
           <div class="account-row">
             <span id="ext-status">Extension non détectée dans ce navigateur.</span>
             <button type="button" id="ext-connect" class="btn primary" disabled>Connecter l'extension</button>

@@ -546,6 +546,13 @@
       try { await C.exportSessionToExtension(); }
       catch (e) { $("#ext-status").textContent = "Erreur : " + e.message; }
     });
+    $("#ext-copy-url")?.addEventListener("click", async () => {
+      const btn = $("#ext-copy-url");
+      try {
+        await navigator.clipboard.writeText("chrome://extensions");
+        btn.textContent = "✓"; setTimeout(() => (btn.textContent = "📋"), 1500);
+      } catch { /* navigateur sans API presse-papiers : rien de grave */ }
+    });
 
     C.init().then(render);
   }

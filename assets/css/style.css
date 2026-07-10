@@ -139,3 +139,8 @@ textarea{resize:vertical}
 .account small{color:var(--muted);font-size:.82rem;display:block;margin:2px 0 6px}
 .account-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px}
 .account-row input{flex:1;min-width:180px}
+
+/* Étapes d'installation de l'extension */
+.ext-steps{margin:6px 0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+.ext-steps li{font-size:.88rem}
+.ext-steps code{margin:0 2px}

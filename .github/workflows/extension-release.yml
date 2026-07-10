@@ -1,0 +1,40 @@
+name: Publier le ZIP de l'extension
+
+# Génère un .zip prêt à l'emploi du dossier extension/ à chaque changement,
+# et le publie comme asset d'une Release stable ("extension-latest") — donne
+# aux utilisateurs un lien de téléchargement direct et permanent, sans avoir
+# à télécharger tout le dépôt.
+
+on:
+  push:
+    branches: [main]
+    paths: ["extension/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Créer le ZIP
+        run: |
+          cd extension
+          zip -r ../chercheappart-extension.zip . -x "*.DS_Store"
+          cd ..
+          unzip -l chercheappart-extension.zip
+
+      - name: Publier / mettre à jour la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: extension-latest
+          name: "Extension navigateur (dernière version)"
+          body: |
+            ZIP prêt à l'emploi du dossier `extension/` — généré automatiquement
+            à chaque mise à jour. Voir [SETUP.md](../../blob/main/SETUP.md#7-option-extension-navigateur--détection-quasi-instantanée)
+            pour l'installation (mode développeur, extension non publiée).
+          files: chercheappart-extension.zip
+          make_latest: false
