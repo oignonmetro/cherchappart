@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChercheAppart — veille d'annonces immobilières</title>
+  <meta name="description" content="Définissez vos critères, générez les recherches filtrées sur Leboncoin, SeLoger et PAP, suivez les nouvelles annonces et contactez les annonceurs en un clic." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">🏠 <span>ChercheAppart</span></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="criteres" role="tab">Critères</button>
+        <button class="tab" data-tab="recherches" role="tab">Recherches</button>
+        <button class="tab" data-tab="annonces" role="tab">Annonces <span id="badge-count" class="badge" hidden>0</span></button>
+        <button class="tab" data-tab="apropos" role="tab">À propos</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ============ CRITÈRES ============ -->
+    <section id="panel-criteres" class="panel is-active" role="tabpanel">
+      <h1>Vos critères de recherche</h1>
+      <p class="lead">Ces critères sont enregistrés dans votre navigateur. Exportez-les en <code>criteria.json</code> pour que la veille automatique (GitHub Actions) les utilise.</p>
+
+      <form id="criteria-form" class="card grid">
+        <div class="field span-2">
+          <label>Villes / secteurs recherchés</label>
+          <div class="tag-input" id="villes-wrap">
+            <input type="text" id="ville-input" placeholder="Ex. Paris, puis Entrée" autocomplete="off" />
+          </div>
+          <small>Appuyez sur Entrée après chaque ville.</small>
+        </div>
+
+        <div class="field">
+          <label>Type de transaction</label>
+          <select id="transaction">
+            <option value="location">Location</option>
+            <option value="vente">Vente / Achat</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Type de bien</label>
+          <div class="checks">
+            <label><input type="checkbox" class="typeBien" value="appartement" checked /> Appartement</label>
+            <label><input type="checkbox" class="typeBien" value="maison" /> Maison</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="lbl-prix">Loyer / prix (€)</label>
+          <div class="range">
+            <input type="number" id="prixMin" placeholder="min" min="0" />
+            <span>—</span>
+            <input type="number" id="prixMax" placeholder="max" min="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Surface (m²)</label>
+          <div class="range">
+            <input type="number" id="surfaceMin" placeholder="min" min="0" />
+            <span>—</span>
+            <input type="number" id="surfaceMax" placeholder="max" min="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Nombre de pièces</label>
+          <div class="range">
+            <input type="number" id="piecesMin" placeholder="min" min="0" />
+            <span>—</span>
+            <input type="number" id="piecesMax" placeholder="max" min="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Vendeur / bailleur</label>
+          <select id="ownerType">
+            <option value="all">Tous</option>
+            <option value="private">Particuliers uniquement</option>
+            <option value="pro">Professionnels uniquement</option>
+          </select>
+        </div>
+
+        <div class="field span-2">
+          <label>Sites à surveiller</label>
+          <div class="checks">
+            <label><input type="checkbox" class="site" value="leboncoin" checked /> Leboncoin</label>
+            <label><input type="checkbox" class="site" value="pap" checked /> PAP</label>
+            <label><input type="checkbox" class="site" value="seloger" /> SeLoger</label>
+          </div>
+        </div>
+
+        <div class="field span-2">
+          <label>Mots-clés à exclure (optionnel)</label>
+          <input type="text" id="motsExclus" placeholder="Ex. colocation, rez-de-chaussée, sous-location" />
+          <small>Séparés par des virgules. Une annonce contenant l'un de ces mots sera masquée.</small>
+        </div>
+
+        <hr class="span-2" />
+
+        <div class="field span-2">
+          <label>Modèle de message de contact</label>
+          <textarea id="messageModele" rows="5"></textarea>
+          <small>Variables disponibles : <code>{{titre}}</code>, <code>{{prix}}</code>, <code>{{ville}}</code>, <code>{{lien}}</code>.</small>
+        </div>
+
+        <div class="field span-2 switch-row">
+          <label class="switch">
+            <input type="checkbox" id="contactAuto" />
+            <span class="slider"></span>
+          </label>
+          <div>
+            <strong>Proposer le contact automatiquement</strong>
+            <small>Pour chaque nouvelle annonce correspondante, ouvre directement le brouillon de message. (L'envoi reste validé par vous — voir l'onglet « À propos ».)</small>
+          </div>
+        </div>
+
+        <div class="actions span-2">
+          <button type="button" id="save-btn" class="btn primary">💾 Enregistrer</button>
+          <button type="button" id="export-btn" class="btn">⬇️ Exporter criteria.json</button>
+          <button type="button" id="reset-btn" class="btn ghost">Réinitialiser</button>
+          <span id="save-status" class="save-status"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ RECHERCHES ============ -->
+    <section id="panel-recherches" class="panel" role="tabpanel">
+      <h1>Recherches filtrées</h1>
+      <p class="lead">Vos critères sont traduits en URL de recherche réelles. Cliquez pour ouvrir la recherche déjà filtrée sur chaque site.</p>
+      <div id="search-links" class="links-list"></div>
+    </section>
+
+    <!-- ============ ANNONCES ============ -->
+    <section id="panel-annonces" class="panel" role="tabpanel">
+      <h1>Annonces trouvées</h1>
+      <p class="lead">Récupérées par la veille automatique (fichier <code>data/listings.json</code>). Les nouvelles depuis votre dernière visite sont marquées <span class="badge inline">nouveau</span>.</p>
+      <div class="toolbar">
+        <input type="search" id="filter-text" placeholder="Filtrer par mot…" />
+        <select id="filter-site">
+          <option value="">Tous les sites</option>
+          <option value="leboncoin">Leboncoin</option>
+          <option value="pap">PAP</option>
+          <option value="seloger">SeLoger</option>
+        </select>
+        <label class="only-new"><input type="checkbox" id="only-new" /> Nouvelles seulement</label>
+        <button id="mark-seen" class="btn ghost small">Tout marquer comme vu</button>
+      </div>
+      <div id="listings" class="listings"></div>
+      <p id="listings-empty" class="empty" hidden></p>
+    </section>
+
+    <!-- ============ À PROPOS ============ -->
+    <section id="panel-apropos" class="panel" role="tabpanel">
+      <h1>Comment ça marche</h1>
+      <div class="card prose">
+        <h3>Architecture</h3>
+        <ul>
+          <li><strong>Cette page (GitHub Pages)</strong> — interface statique : critères, génération des recherches filtrées, tableau de bord des annonces, brouillons de contact.</li>
+          <li><strong>GitHub Actions (le moteur)</strong> — un workflow planifié (cron) exécute le scraper toutes les quelques heures, récupère les annonces correspondant à <code>data/criteria.json</code> et met à jour <code>data/listings.json</code>. C'est ce qui permet la veille « régulière » sans serveur.</li>
+        </ul>
+        <h3>Contact automatique : le choix responsable</h3>
+        <p>Envoyer des messages de façon totalement automatisée sur Leboncoin, SeLoger ou PAP enfreint leurs conditions d'utilisation et leurs protections anti-robot. ChercheAppart fait donc du <strong>contact semi-automatique</strong> : le message est <em>pré-rédigé</em> depuis votre modèle et ouvert en un clic (mailto ou page de l'annonce) — <strong>vous validez l'envoi</strong>. C'est fiable, conforme, et ça évite les blocages de compte.</p>
+        <h3>Limites honnêtes</h3>
+        <ul>
+          <li>Les sites protègent leurs pages ; le scraping peut être bloqué depuis les serveurs GitHub. Le scraper est conçu pour échouer proprement et se brancher sur un proxy / une API si besoin (voir le <code>README</code>).</li>
+          <li>Le générateur d'URL est, lui, 100 % fiable — c'est le socle recommandé au quotidien.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal contact -->
+  <div id="contact-modal" class="modal" hidden>
+    <div class="modal-box">
+      <button class="modal-close" id="modal-close">✕</button>
+      <h3>Contacter l'annonceur</h3>
+      <p id="modal-listing" class="muted"></p>
+      <textarea id="modal-message" rows="7"></textarea>
+      <div class="actions">
+        <button id="modal-copy" class="btn">📋 Copier le message</button>
+        <a id="modal-mailto" class="btn" target="_blank" rel="noopener">✉️ Ouvrir par email</a>
+        <a id="modal-open" class="btn primary" target="_blank" rel="noopener">↗️ Ouvrir l'annonce</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="wrap foot">
+    ChercheAppart · veille d'annonces open-source · vos données restent dans votre navigateur.
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

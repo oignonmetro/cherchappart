@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-07-10T00:00:00Z",
+  "listings": [
+    {
+      "id": "demo-1",
+      "source": "leboncoin",
+      "title": "Appartement 2 pièces 42 m² lumineux",
+      "price": "1 150 €/mois",
+      "surface": 42,
+      "rooms": 2,
+      "location": "Paris 11e",
+      "url": "https://www.leboncoin.fr/recherche?category=10",
+      "image": "",
+      "contactEmail": "",
+      "postedAt": "2026-07-09T18:20:00Z"
+    },
+    {
+      "id": "demo-2",
+      "source": "pap",
+      "title": "Studio meublé proche métro",
+      "price": "890 €/mois",
+      "surface": 26,
+      "rooms": 1,
+      "location": "Lyon 3e",
+      "url": "https://www.pap.fr/annonce/locations-appartement-lyon",
+      "image": "",
+      "contactEmail": "",
+      "postedAt": "2026-07-09T09:05:00Z"
+    }
+  ]
+}
