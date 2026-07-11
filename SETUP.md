@@ -139,6 +139,23 @@ Comme pour les e-mails, les annonces détectées apparaissent au prochain passag
 du serveur (≤ 30 min) sous forme de notification push (la clé d'envoi reste
 côté serveur, jamais dans l'extension).
 
+## 8. (Option) Agent local — surveillance autonome sans extension
+
+Si vous ne voulez pas d'extension mais souhaitez une surveillance **automatique**
+de Leboncoin/PAP/SeLoger (ex. toutes les heures), l'**agent local** est la
+solution. C'est un petit programme Node qui tourne sur votre machine, ouvre vos
+URL de recherche dans un navigateur (votre IP résidentielle → pas de blocage
+anti-bot, contrairement à un serveur) et pousse les nouvelles annonces dans
+Supabase — d'où le même push que le reste.
+
+**Pourquoi côté machine et pas serveur ?** Testé : Leboncoin/PAP/SeLoger renvoient
+403 (DataDome) même à un vrai navigateur headless depuis un serveur GitHub, car
+l'IP est « datacenter ». Seule une IP résidentielle (la vôtre) passe. C'est gratuit
+et sans extension.
+
+👉 Installation, configuration et planification (Windows / macOS / Linux) :
+**[`agent/README.md`](agent/README.md)**.
+
 ## Notes
 
 - **iOS** : le Web Push exige d'**ajouter le site à l'écran d'accueil** (Safari ▸ Partager

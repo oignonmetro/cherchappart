@@ -20,6 +20,7 @@ les messages de contact. Aucun réglage n'est imposé, aucune donnée n'est part
 | **Veille serveur + alertes push** | ✅ Option gratuite | Backend Supabase + cron GitHub Actions : la veille tourne **en arrière-plan, par utilisateur, app fermée**, et notifie chaque nouvelle annonce. Voir [`SETUP.md`](SETUP.md) |
 | **Alertes Leboncoin / PAP / SeLoger (e-mail)** | ✅ Option gratuite | Lit vos propres alertes e-mail de ces sites (par utilisateur), sans scraping — conforme aux CGU. Voir [`SETUP.md`](SETUP.md#6-option-alertes-leboncoin--pap--seloger--sans-scraping) |
 | **Extension navigateur (Leboncoin/PAP/SeLoger)** | ✅ Option gratuite | Surveille vos recherches sauvegardées depuis **votre propre navigateur** (vos cookies), en complément de l'e-mail, pour une détection plus rapide. Voir [`SETUP.md`](SETUP.md#7-option-extension-navigateur--détection-quasi-instantanée) |
+| **Agent local (Leboncoin/PAP/SeLoger)** | ✅ Option gratuite | Programme Node sur **votre machine** (IP résidentielle → pas de blocage anti-bot) qui surveille vos URL de recherche automatiquement (ex. horaire), sans extension. Voir [`agent/README.md`](agent/README.md) |
 
 ## Deux modes
 
@@ -96,6 +97,7 @@ assets/js/cloud.js          Compte, veille serveur, boîte e-mail, extension (op
 backend/                    Worker de veille serveur (Node) + ingestion e-mail
 supabase/schema.sql         Schéma de la base (comptes, recherches, annonces, RLS)
 extension/                  Extension navigateur optionnelle (Leboncoin/PAP/SeLoger)
+agent/                      Agent local optionnel (Node) : surveille les URL de recherche
 scraper/                    Veille CLI optionnelle (Python) + adaptateurs par site
 ```
 

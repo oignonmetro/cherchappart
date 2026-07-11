@@ -1,0 +1,15 @@
+{
+  "name": "chercheappart-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent local ChercheAppart : surveille les URL de recherche Leboncoin/PAP/SeLoger depuis votre machine (IP résidentielle) et pousse les annonces dans Supabase.",
+  "scripts": {
+    "start": "node agent.mjs",
+    "dry-run": "node agent.mjs --dry-run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "playwright": "^1.47.0"
+  }
+}

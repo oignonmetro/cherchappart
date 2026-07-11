@@ -1,0 +1,7 @@
+{
+  "_comment": "Copiez ce fichier en config.json et collez-y les URL de recherche générées dans l'onglet « Recherches » du site (une par site). L'agent ne lit que la 1re page de chacune.",
+  "urls": [
+    "https://www.leboncoin.fr/recherche?category=10&locations=Paris&price=min-1200&real_estate_type=2&sort=time&order=desc",
+    "https://www.pap.fr/annonce/locations-appartement-paris"
+  ]
+}

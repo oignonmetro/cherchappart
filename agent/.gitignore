@@ -1,0 +1,5 @@
+# Secrets et données locales — ne jamais versionner
+.env
+config.json
+.userdata/
+node_modules/
